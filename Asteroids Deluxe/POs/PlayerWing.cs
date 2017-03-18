@@ -23,7 +23,7 @@ namespace Asteroids_Deluxe
         public override void BeginRun()
         {
             base.BeginRun();
-
+            Active = false;
         }
 
         public override void Update(GameTime gameTime)
@@ -43,9 +43,7 @@ namespace Asteroids_Deluxe
             pointPosition[4] = new Vector3(-11.7f, 3.65f, 0);//Connect to top back tip.
             pointPosition[5] = new Vector3(-6.44f, 14.63f, 0);//Top wing tip.
 
-            InitializePoints(pointPosition);
-
-            Radius = 14.63f;
+            Radius = InitializePoints(pointPosition);
         }
     }
 }

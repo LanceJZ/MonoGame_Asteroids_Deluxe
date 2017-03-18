@@ -50,10 +50,9 @@ namespace Asteroids_Deluxe
             pointPosition[2] = new Vector3(0.5f, 0.5f, 0);
             pointPosition[3] = new Vector3(-0.5f, -0.5f, 0);
 
-            InitializePoints(pointPosition);
+            Radius = InitializePoints(pointPosition);
 
             Active = false;
-            Radius = 0.5f;
         }
     }
 }

@@ -202,19 +202,19 @@ namespace Asteroids_Deluxe.VectorEngine
 
         public static float RandomRadian()
         {
-            return Services.RandomMinMax(0, (float)Math.PI * 2);
+            return RandomMinMax(0, (float)Math.PI * 2);
         }
 
         public static Vector3 SetRandomVelocity(float speed)
         {
             float ang = RandomRadian();
-            float amt = Services.RandomMinMax(speed * 0.15f, speed);
+            float amt = RandomMinMax(speed * 0.15f, speed);
             return SetVelocityFromAngle(ang, amt);
         }
 
         public static Vector3 SetRandomVelocity(float speed, float radianDirection)
         {
-            float amt = Services.RandomMinMax(speed * 0.15f, speed);
+            float amt = RandomMinMax(speed * 0.15f, speed);
             return SetVelocityFromAngle(radianDirection, amt);
         }
 
@@ -231,10 +231,10 @@ namespace Asteroids_Deluxe.VectorEngine
 
         public static Vector3 SetRandomEdge()
         {
-            return new Vector3(WindowWidth * 0.5f, RandomMinMax(-Services.WindowHeight * 0.45f, Services.WindowHeight * 0.45f), 0);
+            return new Vector3(WindowWidth * 0.5f, RandomMinMax(-WindowHeight * 0.45f, WindowHeight * 0.45f), 0);
         }
 
-        public static float AimAtTarget(Vector3 origin, Vector3 target, float facingAngle)
+        public static float AimAtTarget(Vector3 origin, Vector3 target, float facingAngle, float magnitude)
         {
             float turnVelocity = 0;
             float targetAngle = AngleFromVectors(origin, target);
@@ -255,11 +255,11 @@ namespace Asteroids_Deluxe.VectorEngine
 
             if (facingLessTarget > 0)
             {
-                turnVelocity = -0.5f;
+                turnVelocity = -magnitude;
             }
             else
             {
-                turnVelocity = 0.5f;
+                turnVelocity = magnitude;
             }
 
             return turnVelocity;

@@ -1,9 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Audio;
-using System.Collections.Generic;
-using System;
 
 namespace Asteroids_Deluxe
 {
@@ -12,6 +7,8 @@ namespace Asteroids_Deluxe
     public class Pod : VectorEngine.Vector
     {
         Player m_Player;
+        UFO m_UFO;
+        float m_RotateMagnitude = MathHelper.PiOver2;
         int m_Score = 200;
         bool m_NewWave;
 
@@ -34,9 +31,10 @@ namespace Asteroids_Deluxe
 
         }
 
-        public void Initialize(Player player)
+        public void Initialize(Player player, UFO ufo)
         {
             m_Player = player;
+            m_UFO = ufo;
             Active = false;
         }
 
@@ -50,12 +48,30 @@ namespace Asteroids_Deluxe
         {
             base.Update(gameTime);
 
-            if (Moveable && Active)
+            if (Active & Moveable)
             {
-                if (m_Player.Active && !m_Player.Hit)
-                    RotationVelocity = Serv.AimAtTarget(Position, m_Player.Position, RotationInRadians);
+                if (m_Player.Active && !m_Player.Hit && !m_NewWave)
+                    RotationVelocity = Serv.AimAtTarget(Position, m_Player.Position, RotationInRadians, m_RotateMagnitude);
                 else
+                {
                     RotationVelocity = 0;
+
+                    if (m_UFO.Active)
+                    {
+                        RotationVelocity = Serv.AimAtTarget(Position, m_UFO.Position, RotationInRadians, m_RotateMagnitude);
+                    }
+                }
+
+                if (m_NewWave)
+                {
+                    if (Position.X > Serv.WindowWidth * 0.5f || Position.X < -Serv.WindowWidth * 0.5f
+                        || Position.Y > Serv.WindowHeight * 0.5f || Position.Y < -Serv.WindowHeight * 0.5f)
+                    {
+                        Active = false;
+                    }
+
+                    RotationVelocity = 0;
+                }
 
                 Velocity = Serv.SetVelocityFromAngle(RotationInRadians, 70);
                 CheckCollision();
@@ -72,20 +88,7 @@ namespace Asteroids_Deluxe
             pointPosition[3] = new Vector3(-4.68f, 0, 0);//Back inside indent.
             pointPosition[4] = new Vector3(-11.7f, 14.04f, 0);//Top Back Tip.
 
-            InitializePoints(pointPosition);
-
-            Radius = 14.04f;
-
-        }
-
-        void CheckCollision()
-        {
-            if (CheckPlayerCollision() || CheckPlayerShotCollision())
-            {
-                m_Player.SetScore(m_Score);
-                Active = false;
-                Moveable = false;
-            }
+            Radius = InitializePoints(pointPosition);
         }
 
         public bool CheckPlayerShotCollision()
@@ -109,7 +112,14 @@ namespace Asteroids_Deluxe
         {
             if (m_Player.Active && !m_Player.Hit)
             {
-                if (CirclesIntersect(m_Player.Position, m_Player.Radius))
+                if (m_Player.Shield.Active)
+                {
+                    if (CirclesIntersect(m_Player.Position, m_Player.Shield.Radius))
+                    {
+                        return true;
+                    }
+                }
+                else if (CirclesIntersect(m_Player.Position, m_Player.Radius))
                 {
                     m_Player.Hit = true;
                     return true;
@@ -117,6 +127,64 @@ namespace Asteroids_Deluxe
             }
 
             return false;
+        }
+
+        public bool CheckUFOCollision()
+        {
+            if (m_UFO.Active)
+            {
+                if (CirclesIntersect(m_UFO.Position, m_UFO.Radius))
+                {
+                    m_UFO.Explode();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool CheckUFOShotCollision()
+        {
+            if (m_UFO.Shot.Active)
+            {
+                if (CirclesIntersect(m_UFO.Shot.Position, m_UFO.Shot.Radius))
+                {
+                    m_UFO.Shot.Active = false;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        void CheckCollision()
+        {
+            if (CheckPlayerCollision())
+            {
+                if (m_Player.Shield.Active)
+                {
+                    m_Player.ShieldHit(Position, Velocity);
+                }
+                else
+                {
+                    m_Player.SetScore(m_Score);
+                    Active = false;
+                    Moveable = false;
+                }
+            }
+
+            if (CheckPlayerShotCollision())
+            {
+                m_Player.SetScore(m_Score);
+                Active = false;
+                Moveable = false;
+            }
+
+            if (CheckUFOCollision() || CheckUFOShotCollision())
+            {
+                Active = false;
+                Moveable = false;
+            }
         }
     }
 }

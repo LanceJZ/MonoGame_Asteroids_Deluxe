@@ -4,8 +4,12 @@ namespace Asteroids_Deluxe
 {
     public class PlayerShip : VectorEngine.Vector
     {
+        PlayerWing m_Wing;
+
         public PlayerShip(Game game) : base(game)
         {
+            m_Wing = new PlayerWing(game);
+            AddChild(m_Wing, true, true);
         }
 
         public override void Initialize()
@@ -17,6 +21,8 @@ namespace Asteroids_Deluxe
         {
             base.BeginRun();
             Moveable = false;
+            Radius = m_Wing.Radius;
+            Active = false;
         }
 
         protected override void InitializeLineMesh()
@@ -31,8 +37,6 @@ namespace Asteroids_Deluxe
             pointPosition[5] = new Vector3(-13.5f, 8.2f, 0);//Top Back Tip.
 
             InitializePoints(pointPosition);
-
-            Radius = 13.5f;
         }
     }
 }

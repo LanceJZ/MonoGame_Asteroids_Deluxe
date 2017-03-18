@@ -10,12 +10,13 @@ namespace Asteroids_Deluxe
     /// As the player's score increases, the angle range of the shots from the small saucer diminishes
     /// until the saucer fires extremely accurately.
     /// The small saucer will fire immediately when spawned. (Revision 3 of original arcade.)
+    ///
+    /// For Deluxe version Large UFO aims at player 1 out of 3 shots. Small UFO aims at player 3 out of 4.
     /// </summary>
     public class UFO : VectorEngine.Vector
     {
         Player m_Player;
         Shot m_Shot;
-        PodGroup m_Pod;
         Explode m_Explosion;
         Timer m_ShotTimer;
         Timer m_VectorTimer;
@@ -26,6 +27,7 @@ namespace Asteroids_Deluxe
         SoundEffect m_Small;
         SoundEffect m_FireShot;
         float m_Speed = 66;
+        float m_Radius;
         int m_Points;
         int m_PlayerScore;
         bool m_SmallSoucer;
@@ -69,10 +71,9 @@ namespace Asteroids_Deluxe
             m_Explosion = new Explode(game);
         }
 
-        public void Initialize(Player player, PodGroup pod)
+        public void Initialize(Player player)
         {
             m_Player = player;
-            m_Pod = pod;
             Active = false;
             m_ShotTimer.Amount = 2.75f;
             m_VectorTimer.Amount = 3.15f;
@@ -129,8 +130,9 @@ namespace Asteroids_Deluxe
                 CheckBorders();
                 TimeToChangeVectorYet();
                 TimeToShotYet();
-                CheckColusion();
             }
+
+            CheckColusion();
         }
 
         public void Spawn(int SpawnCount, int Wave)
@@ -147,15 +149,16 @@ namespace Asteroids_Deluxe
             {
                 m_SmallSoucer = false;
                 m_Points = 200;
-                ScalePercent = 1;
+                Scale = 1;
             }
             else
             {
                 m_SmallSoucer = true;
                 m_Points = 1000;
-                ScalePercent = 0.5f;
+                Scale = 0.5f;
             }
 
+            Radius = m_Radius * Scale;
             Position.Y = Serv.RandomMinMax(-Serv.WindowHeight * 0.25f, Serv.WindowHeight * 0.25f);
 
             if (Serv.RandomMinMax(0, 10) > 5)
@@ -185,48 +188,48 @@ namespace Asteroids_Deluxe
             {
                 if (Active)
                 {
-                    if (CirclesIntersect(m_Player.Position, m_Player.Radius))
+                    if (m_Player.Shield.Active)
+                    {
+                        if (CirclesIntersect(m_Player.Position, m_Player.Shield.Radius))
+                        {
+                            m_Player.ShieldHit(Position, Velocity);
+                        }
+                    }
+                    else if (CirclesIntersect(m_Player.Position, m_Player.Radius))
                     {
                         Explode();
                         m_Player.Hit = true;
                         m_Player.SetScore(m_Points);
                     }
-
-                    for (int i = 0; i < 4; i++)
-                    {
-                        if (m_Player.Shots[i].Active)
-                        {
-                            if (CirclesIntersect(m_Player.Shots[i].Position, m_Player.Shots[i].Radius))
-                            {
-                                Explode();
-                                m_Player.Shots[i].Active = false;
-                                m_Player.SetScore(m_Points);
-                            }
-                        }
-                    }
-
-                    if (m_Pod.Active)
-                    {
-                        if (CirclesIntersect(m_Pod.Position, m_Pod.Radius))
-                        {
-                            Explode();
-                            m_Pod.SplitAppart();
-                        }
-
-                        if (m_Shot.CirclesIntersect(m_Pod.Position, m_Pod.Radius))
-                        {
-                            m_Shot.Active = false;
-                            m_Pod.SplitAppart();
-                        }
-                    }
                 }
 
                 if (m_Shot.Active)
                 {
-                    if (m_Shot.CirclesIntersect(m_Player.Position, m_Player.Radius))
+                    if (m_Player.Shield.Active)
+                    {
+                        if (m_Shot.CirclesIntersect(m_Player.Position, m_Player.Shield.Radius))
+                        {
+                            m_Player.ShieldHit();
+                            m_Shot.Active = false;
+                        }
+                    }
+                    else if (m_Shot.CirclesIntersect(m_Player.Position, m_Player.Radius))
                     {
                         m_Shot.Active = false;
                         m_Player.Hit = true;
+                    }
+                }
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (m_Player.Shots[i].Active)
+                {
+                    if (CirclesIntersect(m_Player.Shots[i].Position, m_Player.Shots[i].Radius))
+                    {
+                        Explode();
+                        m_Player.Shots[i].Active = false;
+                        m_Player.SetScore(m_Points);
                     }
                 }
             }
@@ -257,12 +260,19 @@ namespace Asteroids_Deluxe
             float speed = 400;
             float rad = 0;
 
+            //Adjust accuracy according to score. By the time the score reaches 30,000, percent = 0.
+            float percent = 0.25f - (m_PlayerScore * 0.00001f);
+
             if (!m_SmallSoucer)
-                rad = Serv.RandomRadian();
+            {
+                if (Serv.RandomMinMax(0, 4) > 3)
+                    rad = Serv.RandomRadian();
+                else
+                    rad = Serv.AngleFromVectors(Position, m_Player.Position) + Serv.RandomMinMax(-percent, percent);
+
+            }
             else
             {
-                //Adjust accuracy according to score. By the time the score reaches 30,000, percent = 0.
-                float percent = 0.25f - (m_PlayerScore * 0.00001f);
                 if (percent < 0)
                     percent = 0;
 
@@ -307,8 +317,7 @@ namespace Asteroids_Deluxe
             pointPosition[10] = new Vector3(-22.3f, -4.7f, 0);// Lower inside left
             pointPosition[11] = new Vector3(22.3f, -4.7f, 0);// Lower inside Right
 
-            InitializePoints(pointPosition);
-            Radius = 22.3f;
+            m_Radius = InitializePoints(pointPosition);
         }
     }
 }

@@ -23,19 +23,19 @@ namespace Asteroids_Deluxe
         PodGroup m_Pod;
         Timer m_UFOTimer;
         Timer m_PodTimer;
-        Timer m_BackOnePlay;
+        Timer m_BackGroundPlay;
         Timer m_BackTwoPlay;
-        Timer m_BackgroundOneDelay;
+        Timer m_BackgroundDelay;
         Timer m_BackgroundTwoDelay;
         Timer m_GameWavePlayTime;
         List<Rock> m_LargeRocks;
         List<Rock> m_MedRocks;
         List<Rock> m_SmallRocks;
         SoundEffect m_RockExplode;
-        SoundEffect m_BackgroundOne;
-        SoundEffect m_BackgroundTwo;
+        SoundEffect m_Background;
         Word m_AtariHUD;
         Number m_AtariDate;
+        KeyboardState m_KeyState, m_KeyStateOld;
         readonly float m_UFOTimerSeedAmount = 10.15f;
         readonly float m_PodTimerSeedAmount = 30;
         readonly float m_BackgroundOneDelaySeed = 1;
@@ -44,8 +44,9 @@ namespace Asteroids_Deluxe
         int m_Wave;
         int m_LargeRockSpawnAmount;
         int m_RockCount;
-        bool m_PlayedOne = false;
+        bool m_PlayedBack = false;
         bool m_PlayedTwo = false;
+        bool m_Paused = false;
 
         public Game()
         {
@@ -66,9 +67,9 @@ namespace Asteroids_Deluxe
             m_Pod = new PodGroup(this);
             m_UFOTimer = new Timer(this);
             m_PodTimer = new Timer(this);
-            m_BackOnePlay = new Timer(this);
+            m_BackGroundPlay = new Timer(this);
             m_BackTwoPlay = new Timer(this);
-            m_BackgroundOneDelay = new Timer(this);
+            m_BackgroundDelay = new Timer(this);
             m_BackgroundTwoDelay = new Timer(this);
             m_GameWavePlayTime = new Timer(this);
             m_AtariHUD = new Word(this);
@@ -108,17 +109,17 @@ namespace Asteroids_Deluxe
         /// </summary>
         protected override void LoadContent()
         {
-            m_Player.LoadSounds(Content.Load<SoundEffect>("AsteroidsPlayerFire"),
-                Content.Load<SoundEffect>("AsteroidsPlayerExplosion"), Content.Load<SoundEffect>("AsteroidsBonusShip"),
-                Content.Load<SoundEffect>("AsteroidsThrust"));
+            m_Player.LoadSounds(Content.Load<SoundEffect>("AsteroidsDeluxePlayerFire"),
+                Content.Load<SoundEffect>("AsteroidsPlayerExplosion"), Content.Load<SoundEffect>("AsteroidsDeluxeBonusShip"),
+                Content.Load<SoundEffect>("AsteroidsDeluxePlayerThrust"), Content.Load<SoundEffect>("AsteroidsDeluxePlayerStart"),
+                Content.Load<SoundEffect>("AsteroidsDeluxeShield"));
 
             m_UFO.LoadSounds(Content.Load<SoundEffect>("AsteroidsUFOExplosion"),
                 Content.Load<SoundEffect>("AsteroidsUFOShot"), Content.Load<SoundEffect>("AsteroidsUFOLarge"),
                 Content.Load<SoundEffect>("AsteroidsUFOSmall"));
 
             m_RockExplode = Content.Load<SoundEffect>("AsteroidsRockExplosion");
-            m_BackgroundOne = Content.Load<SoundEffect>("AsteroidsBackgroundOne");
-            m_BackgroundTwo = Content.Load<SoundEffect>("AsteroidsBackgroundTwo");
+            m_Background = Content.Load<SoundEffect>("AsteroidsDeluxeBackground");
         }
 
         /// <summary>
@@ -144,18 +145,17 @@ namespace Asteroids_Deluxe
             m_Player.Active = false;
             m_UFOTimer.Reset();
             m_UFOTimer.Amount = m_UFOTimerSeedAmount;
-            m_UFO.Initialize(m_Player, m_Pod);
-            m_Pod.Initialize(m_Player);
+            m_UFO.Initialize(m_Player);
+            m_Pod.Initialize(m_Player, m_UFO);
             m_Pod.BeginRun();
             m_PodTimer.Reset();
             m_PodTimer.Amount = m_PodTimerSeedAmount;
             m_PlayerClear.Radius = 150;
             m_PlayerClear.Moveable = false;
-            m_BackOnePlay.Amount = m_BackgroundOne.Duration.Seconds;
-            m_BackTwoPlay.Amount = m_BackgroundTwo.Duration.Seconds;
+            m_BackGroundPlay.Amount = m_Background.Duration.Seconds;
             SpawnLargeRocks(4);
             m_AtariHUD.ProcessWords("ATARI INC", new Vector3(34, (-Serv.WindowHeight * 0.5f) + 20, 0), 5);
-            m_AtariDate.ProcessNumber(1979, new Vector3(-34, (-Serv.WindowHeight * 0.5f) + 20, 0), 5);
+            m_AtariDate.ProcessNumber(1980, new Vector3(-34, (-Serv.WindowHeight * 0.5f) + 20, 0), 5);
         }
 
         /// <summary>
@@ -165,27 +165,21 @@ namespace Asteroids_Deluxe
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            base.Update(gameTime);
-#if DEBUG
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-#endif
-            if (m_Player.GameOver)
-            {
-                if (Keyboard.GetState().IsKeyDown(Keys.N))
-                {
-                    m_Player.GameOver = false;
-                    NewGame();
-                }
-            }
-            else if (m_Player.CheckClear)
+            m_KeyState = Keyboard.GetState();
+            KeyInput();
+            m_KeyStateOld = m_KeyState;
+
+            if (m_Paused)
+                return;
+
+            if (m_Player.CheckClear)
             {
                 if (CheckPlayerClear())
                 {
                     m_Player.Spawn = true;
                 }
             }
-            else
+            else if (!m_Player.GameOver)
             {
                 PlayBackground();
             }
@@ -193,6 +187,8 @@ namespace Asteroids_Deluxe
             CountRocks();
             UFOController();
             PodController();
+
+            base.Update(gameTime);
         }
 
         /// <summary>
@@ -206,38 +202,45 @@ namespace Asteroids_Deluxe
             base.Draw(gameTime);
         }
 
-        void PlayBackground()
+        void KeyInput()
         {
-            if (m_BackgroundOneDelay.Seconds > m_BackgroundOneDelay.Amount)
+#if DEBUG
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+                Exit();
+
+            if (m_KeyState.IsKeyDown(Keys.K) && !m_KeyStateOld.IsKeyDown(Keys.K))
             {
-                m_BackgroundOneDelay.Reset();
-
-                if (m_BackgroundOneDelay.Amount > 0.25f)
-                    m_BackgroundOneDelay.Amount -= 0.025f;
-
-
-                if (m_BackOnePlay.Seconds > m_BackOnePlay.Amount && !m_PlayedOne)
-                {
-                    m_PlayedOne = true;
-                    m_PlayedTwo = false;
-                    m_BackOnePlay.Reset();
-                    m_BackgroundOne.Play(0.5f, 0, 0);
-                }
+                m_Pod.Reset();
+                m_Pod.Spawn();
+            }
+#endif
+            if (m_KeyState.IsKeyDown(Keys.P) && !m_KeyStateOld.IsKeyDown(Keys.P))
+            {
+                m_Paused = !m_Paused;
             }
 
-            if (m_BackgroundTwoDelay.Seconds > m_BackgroundTwoDelay.Amount)
+            if (m_KeyState.IsKeyDown(Keys.N) && !m_KeyStateOld.IsKeyDown(Keys.N) && m_Player.GameOver)
             {
-                m_BackgroundTwoDelay.Reset();
+                m_Player.GameOver = false;
+                NewGame();
+            }
+        }
 
-                if (m_BackgroundTwoDelay.Amount > 0.5f)
-                    m_BackgroundTwoDelay.Amount -= 0.025f;
+        void PlayBackground()
+        {
+            if (m_BackgroundDelay.Seconds > m_BackgroundDelay.Amount)
+            {
+                m_BackgroundDelay.Reset();
 
-                if (m_BackTwoPlay.Seconds > m_BackTwoPlay.Amount && !m_PlayedTwo)
+                if (m_BackgroundDelay.Amount > 0.25f)
+                    m_BackgroundDelay.Amount -= 0.025f;
+
+
+                if (m_BackGroundPlay.Seconds > m_BackGroundPlay.Amount && !m_PlayedBack)
                 {
-                    m_PlayedOne = false;
-                    m_PlayedTwo = true;
-                    m_BackTwoPlay.Reset();
-                    m_BackgroundTwo.Play();
+                    m_PlayedBack = true;
+                    m_BackGroundPlay.Reset();
+                    m_Background.Play(0.25f, 0, 0);
                 }
             }
         }
@@ -316,6 +319,7 @@ namespace Asteroids_Deluxe
         {
             m_Player.NewGame();
             ResetUFO();
+            ResetPod();
 
             for (int i = 0; i < m_LargeRocks.Count; i++)
             {
@@ -335,7 +339,7 @@ namespace Asteroids_Deluxe
             m_Wave = 0;
             m_UFOCount = 0;
             SpawnLargeRocks(m_LargeRockSpawnAmount = 4);
-            m_BackgroundOneDelay.Amount = m_BackgroundOneDelaySeed;
+            m_BackgroundDelay.Amount = m_BackgroundOneDelaySeed;
             m_BackgroundTwoDelay.Amount = m_BackgroundTwoDelaySeed;
 
         }
@@ -368,9 +372,13 @@ namespace Asteroids_Deluxe
                     m_PodTimer.Reset();
 
                     if (m_Pod.Done)
+                    {
                         m_Pod.Spawn();
+                    }
                 }
             }
+            else
+                m_PodTimer.Reset();
         }
 
         void ResetUFO()
@@ -439,8 +447,8 @@ namespace Asteroids_Deluxe
 
             if (m_RockCount == 0)
             {
-                if (m_LargeRockSpawnAmount > 10)
-                    m_LargeRockSpawnAmount = 10;
+                if (m_LargeRockSpawnAmount > 12)
+                    m_LargeRockSpawnAmount = 12;
 
                 SpawnLargeRocks(m_LargeRockSpawnAmount += 2);
                 m_Wave++;
@@ -472,10 +480,7 @@ namespace Asteroids_Deluxe
                 {
                     int rock = m_LargeRocks.Count;
                     m_LargeRocks.Add(new Rock(this));
-                    m_LargeRocks[rock].Player = m_Player;
-                    m_LargeRocks[rock].UFO = m_UFO;
-                    m_LargeRocks[rock].Spawn();
-                    m_LargeRocks[rock].Position = Serv.SetRandomEdge();
+                    m_LargeRocks[rock].Spawn(m_Player, m_UFO);
                     m_LargeRocks[rock].LoadSound(m_RockExplode);
                 }
             }

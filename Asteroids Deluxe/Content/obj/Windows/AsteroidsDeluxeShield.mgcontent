@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SourceFile>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxeShield.wav</SourceFile>
+  <SourceTime>2016-01-24T23:35:02.3871086-08:00</SourceTime>
+  <DestFile>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/bin/Windows/AsteroidsDeluxeShield.xnb</DestFile>
+  <DestTime>2017-03-17T23:54:25.1557867-07:00</DestTime>
+  <Importer>WavImporter</Importer>
+  <ImporterTime>2017-03-01T07:05:36-08:00</ImporterTime>
+  <Processor>SoundEffectProcessor</Processor>
+  <ProcessorTime>2017-03-01T07:05:36-08:00</ProcessorTime>
+  <Parameters>
+    <Key>Quality</Key>
+    <Value>Best</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>

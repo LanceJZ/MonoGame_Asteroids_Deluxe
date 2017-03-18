@@ -14,32 +14,6 @@ namespace Asteroids_Deluxe
         int m_Points = 20;
         float m_Speed = 75;
 
-        public Player Player
-        {
-            get
-            {
-                return m_Player;
-            }
-
-            set
-            {
-                m_Player = value;
-            }
-        }
-
-        public UFO UFO
-        {
-            get
-            {
-                return m_UFO;
-            }
-
-            set
-            {
-                m_UFO = value;
-            }
-        }
-
         public bool ExplosionDone
         {
             get
@@ -96,43 +70,53 @@ namespace Asteroids_Deluxe
 
         void CheckCollusions()
         {
-            if (Player.Active)
+            if (m_Player.Active)
             {
-                if (CirclesIntersect(Player.Position, Player.Radius))
+                if (!m_Player.Shield.Active)
                 {
-                    Explode();
-                    Player.Hit = true;
-                    Player.SetScore(m_Points);
+                    if (CirclesIntersect(m_Player.Position, m_Player.Radius))
+                    {
+                        Explode();
+                        m_Player.Hit = true;
+                        m_Player.SetScore(m_Points);
+                    }
+                }
+                else
+                {
+                    if (CirclesIntersect(m_Player.Shield.Position, m_Player.Shield.Radius))
+                    {
+                        m_Player.ShieldHit(Position, Velocity);
+                    }
                 }
             }
 
             for (int i = 0; i < 4; i++)
             {
-                if (Player.Shots[i].Active)
+                if (m_Player.Shots[i].Active)
                 {
-                    if (CirclesIntersect(Player.Shots[i].Position, Player.Shots[i].Radius))
+                    if (CirclesIntersect(m_Player.Shots[i].Position, m_Player.Shots[i].Radius))
                     {
                         Explode();
-                        Player.Shots[i].Active = false;
-                        Player.SetScore(m_Points);
+                        m_Player.Shots[i].Active = false;
+                        m_Player.SetScore(m_Points);
                     }
                 }
             }
 
-            if (UFO.Active)
+            if (m_UFO.Active)
             {
-                if (CirclesIntersect(UFO.Position, UFO.Radius))
+                if (CirclesIntersect(m_UFO.Position, m_UFO.Radius))
                 {
                     Explode();
-                    UFO.Explode();
+                    m_UFO.Explode();
                 }
 
-                if (UFO.Shot.Active)
+                if (m_UFO.Shot.Active)
                 {
-                    if (CirclesIntersect(UFO.Shot.Position, UFO.Shot.Radius))
+                    if (CirclesIntersect(m_UFO.Shot.Position, m_UFO.Shot.Radius))
                     {
                         Explode();
-                        UFO.Shot.Active = false;
+                        m_UFO.Shot.Active = false;
                     }
                 }
             }
@@ -140,18 +124,26 @@ namespace Asteroids_Deluxe
 
         public void Spawn(Vector3 position, float scale, float speed, int points, Player player, UFO ufo)
         {
-            ScalePercent = scale;
+            Scale = scale;
             Radius = Radius * scale;
             m_Points = points;
             m_Speed = speed;
-            Player = player;
-            UFO = ufo;
+            m_Player = player;
+            m_UFO = ufo;
             Spawn(position);
         }
 
         public void Spawn(Vector3 position)
         {
             Position = position;
+            Spawn();
+        }
+
+        public void Spawn(Player player, UFO ufo)
+        {
+            m_Player = player;
+            m_UFO = ufo;
+            Position = Serv.SetRandomEdge();
             Spawn();
         }
 
@@ -190,9 +182,7 @@ namespace Asteroids_Deluxe
             pointPosition[11] = new Vector3(-24.7f, 0, 0);
             pointPosition[12] = new Vector3(-34, 17.6f, 0);
 
-            InitializePoints(pointPosition);
-
-            Radius = 35.2f;
+            Radius = InitializePoints(pointPosition);
         }
 
         void RockTwo()
@@ -212,9 +202,7 @@ namespace Asteroids_Deluxe
             pointPosition[9] = new Vector3(-34, -16.4f, 0);
             pointPosition[10] = new Vector3(-34, 17.6f, 0);
 
-            InitializePoints(pointPosition);
-
-            Radius = 34;
+            Radius = InitializePoints(pointPosition);
         }
 
         void RockThree()
@@ -236,9 +224,7 @@ namespace Asteroids_Deluxe
             pointPosition[11] = new Vector3(-34, -9.4f, 0);
             pointPosition[12] = new Vector3(-34, 17.6f, 0);
 
-            InitializePoints(pointPosition);
-
-            Radius = 34;
+            Radius = InitializePoints(pointPosition);
         }
 
         void RockFour()
@@ -260,9 +246,7 @@ namespace Asteroids_Deluxe
             pointPosition[11] = new Vector3(-17.6f, 0, 0);
             pointPosition[12] = new Vector3(-34, 9.4f, 0);
 
-            InitializePoints(pointPosition);
-
-            Radius = 35.2f;
+            Radius = InitializePoints(pointPosition);
         }
     }
 }

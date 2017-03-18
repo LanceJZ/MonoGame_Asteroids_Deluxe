@@ -116,7 +116,7 @@ namespace Asteroids_Deluxe
         bool m_GameOver = true;
         bool m_KeyLeftDown = false;
         bool m_KeyRightDown = false;
-        bool m_KeyDownDown = false;
+        bool m_KeyNextDown = false;
         bool m_GameOverDisplayed = false;
 
         public int HighScore
@@ -166,7 +166,7 @@ namespace Asteroids_Deluxe
             m_EnterYourInitials[0] = "YOUR SCORE IS ONE OF THE TEN BEST";
             m_EnterYourInitials[1] = "PLEASE ENTER YOUR INITIALS";
             m_EnterYourInitials[2] = "PUSH ROTATE TO SELECT LETTER";
-            m_EnterYourInitials[3] = "PUSH HYPERSPECE WHEN LETTER IS CURRECT";
+            m_EnterYourInitials[3] = "PUSH SHIELD WHEN LETTER IS CURRECT";
         }
 
         public override void Update(GameTime gameTime)
@@ -356,8 +356,11 @@ namespace Asteroids_Deluxe
                     m_KeyRightDown = true;
                     m_HighScoreSelectedLetters[m_HighScoreSelector]++;
 
-                    if (m_HighScoreSelectedLetters[m_HighScoreSelector] > 90)
+                    if (m_HighScoreSelectedLetters[m_HighScoreSelector] > 95)
                         m_HighScoreSelectedLetters[m_HighScoreSelector] = (char)65;
+
+                    if (m_HighScoreSelectedLetters[m_HighScoreSelector] > 90)
+                        m_HighScoreSelectedLetters[m_HighScoreSelector] = (char)95;
 
                     UpdateLetterSelected();
                 }
@@ -370,18 +373,21 @@ namespace Asteroids_Deluxe
                     m_KeyLeftDown = true;
                     m_HighScoreSelectedLetters[m_HighScoreSelector]--;
 
-                    if (m_HighScoreSelectedLetters[m_HighScoreSelector] < 65)
+                    if (m_HighScoreSelectedLetters[m_HighScoreSelector] == 94)
                         m_HighScoreSelectedLetters[m_HighScoreSelector] = (char)90;
+
+                    if (m_HighScoreSelectedLetters[m_HighScoreSelector] < 65)
+                        m_HighScoreSelectedLetters[m_HighScoreSelector] = (char)95;
 
                     UpdateLetterSelected();
                 }
             }
 
-            if (!m_KeyDownDown)
+            if (!m_KeyNextDown)
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.Down))
+                if (Keyboard.GetState().IsKeyDown(Keys.RightShift))
                 {
-                    m_KeyDownDown = true;
+                    m_KeyNextDown = true;
                     m_HighScoreSelector++;
 
                     UpdateLetterSelected();
@@ -416,8 +422,8 @@ namespace Asteroids_Deluxe
             if (Keyboard.GetState().IsKeyUp(Keys.Left) && m_KeyLeftDown)
                 m_KeyLeftDown = false;
 
-            if (Keyboard.GetState().IsKeyUp(Keys.Down) && m_KeyDownDown)
-                m_KeyDownDown = false;
+            if (Keyboard.GetState().IsKeyUp(Keys.Down) && m_KeyNextDown)
+                m_KeyNextDown = false;
         }
 
         void UpdateLetterSelected()

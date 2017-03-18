@@ -1,9 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Audio;
-using System.Collections.Generic;
-using System;
 
 namespace Asteroids_Deluxe
 {
@@ -13,6 +8,7 @@ namespace Asteroids_Deluxe
     {
         PodPair[] m_PodPair = new PodPair[3];
         Player m_Player;
+        UFO m_UFO;
         int m_Score = 50;
         bool m_NewWave = false;
         bool m_Done = false;
@@ -52,9 +48,10 @@ namespace Asteroids_Deluxe
             }
         }
 
-        public void Initialize(Player player)
+        public void Initialize(Player player, UFO ufo)
         {
             m_Player = player;
+            m_UFO = ufo;
             Active = false;
         }
 
@@ -65,7 +62,7 @@ namespace Asteroids_Deluxe
             for (int i = 0; i < 3; i++)
             {
                 m_PodPair[i].Moveable = false;
-                m_PodPair[i].Initialize(m_Player);
+                m_PodPair[i].Initialize(m_Player, m_UFO);
                 m_PodPair[i].BeginRun();
             }
 
@@ -89,7 +86,7 @@ namespace Asteroids_Deluxe
                     if (Position.X > Serv.WindowWidth * 0.5f || Position.X < -Serv.WindowWidth * 0.5f
                         || Position.Y > Serv.WindowHeight * 0.5f || Position.Y < -Serv.WindowHeight * 0.5f)
                     {
-                        Reset();
+                        Active = false;
                     }
                 }
                 else
@@ -112,7 +109,7 @@ namespace Asteroids_Deluxe
                     }
                 }
 
-                m_Done = true;
+                Reset();
             }
         }
 
@@ -139,14 +136,15 @@ namespace Asteroids_Deluxe
             m_NewWave = false;
             m_Done = false;
 
-
             for (int pair = 0; pair < 3; pair++)
             {
                 m_PodPair[pair].Active = true;
+                m_PodPair[pair].NewWave = false;
 
                 for (int pod = 0; pod < 2; pod++)
                 {
                     m_PodPair[pair].Pods[pod].Active = true;
+                    m_PodPair[pair].Pods[pod].NewWave = false;
                 }
             }
         }
@@ -155,7 +153,7 @@ namespace Asteroids_Deluxe
         {
             Active = false;
             m_NewWave = false;
-            m_Done = false;
+            m_Done = true;
 
             for (int pair = 0; pair < 3; pair++)
             {

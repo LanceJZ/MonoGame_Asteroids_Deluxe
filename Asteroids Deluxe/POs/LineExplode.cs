@@ -49,7 +49,7 @@ namespace Asteroids_Deluxe
         public void Spawn(Vector3 position, float radius)
         {
             m_Active = true;
-            int count = (int)serv.RandomMinMax(5, radius);
+            int count = (int)serv.RandomMinMax(10, radius + 6);
 
             if (count > m_Lines.Count)
             {

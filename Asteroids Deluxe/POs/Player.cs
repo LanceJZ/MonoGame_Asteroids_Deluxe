@@ -16,7 +16,7 @@ namespace Asteroids_Deluxe
         Timer m_ThrustTimer;
         PlayerFlame m_Flame;
         PlayerShip m_Ship;
-        PlayerWing m_Wing;
+        Shield m_Shield;
         List<PlayerShip> m_ShipLives;
         Shot[] m_Shots;
         UFO m_UFO;
@@ -25,62 +25,58 @@ namespace Asteroids_Deluxe
         SoundEffect m_Explode;
         SoundEffect m_Bonus;
         SoundEffect m_Thrust;
+        SoundEffect m_Start;
+        SoundEffect m_ShieldOn;
         LineExplode m_Explosion;
         Number m_ScoreHUD;
         Number m_HiScoreHUD;
         HighScores m_HighScoreList;
+        KeyboardState m_KeyState, m_KeyStateOld;
+        float m_ShieldPower;
         int m_Score;
         int m_HiScore;
         int m_NextBonusLife;
         int m_BaseBonusLife = 5000;
         int m_Lives;
-        bool m_ShotKeyDown = false;
-        bool m_HyperKeyDown = false;
         bool m_Exploding = false;
         bool m_Spawn = true;
         bool m_CheckClear = false;
         bool m_GameOver = false;
+        bool m_ShieldTest = false;
+        bool m_ShieldSoundPlayed = false;
 
         public Shot[] Shots
         {
-            get
-            {
-                return m_Shots;
-            }
+            get { return m_Shots; }
 
-            set
-            {
-                m_Shots = value;
-            }
+            set { m_Shots = value; }
         }
 
-        public bool Spawn
+        public Shield Shield
         {
-            set
-            {
-                m_Spawn = value;
-            }
+            get { return m_Shield; }
+        }
+
+        public bool Exploding
+        {
+            get { return m_Exploding; }
         }
 
         public bool CheckClear
         {
-            get
-            {
-                return m_CheckClear;
-            }
+            get {  return m_CheckClear; }
+        }
+
+        public bool Spawn
+        {
+            set { m_Spawn = value; }
         }
 
         public bool GameOver
         {
-            get
-            {
-                return m_GameOver;
-            }
+            get { return m_GameOver; }
 
-            set
-            {
-                m_GameOver = value;
-            }
+            set { m_GameOver = value; }
         }
 
         public Player(Game game) : base(game)
@@ -90,7 +86,7 @@ namespace Asteroids_Deluxe
             m_ThrustTimer = new Timer(game);
             m_Flame = new PlayerFlame(game);
             m_Ship = new PlayerShip(game);
-            m_Wing = new PlayerWing(game);
+            m_Shield = new Shield(game);
             m_Shots = new Shot[4];
             m_ScoreHUD = new Number(game);
             m_ScoreHUD.Moveable = false;
@@ -102,7 +98,7 @@ namespace Asteroids_Deluxe
 
             AddChild(m_Flame, false, true);
             AddChild(m_Ship, true, true);
-            AddChild(m_Wing, true, true);
+            AddChild(m_Shield, false, true);
 
             for (int i = 0; i < 4; i++)
             {
@@ -135,7 +131,9 @@ namespace Asteroids_Deluxe
         {
             Active = false;
             m_Flame.Active = false;
-            Radius = m_Wing.Radius;
+            m_Ship.BeginRun();
+            m_Shield.BeginRun();
+            Radius = m_Ship.Radius;
             ShipLivesDisplay();
             m_HighScoreList.BeginRun();
             m_HiScore = m_HighScoreList.HighScore;
@@ -145,8 +143,6 @@ namespace Asteroids_Deluxe
 
         public override void Update(GameTime gameTime)
         {
-            base.Update(gameTime);
-
             if (m_Exploding)
             {
                 if (!m_Explosion.Active)
@@ -163,6 +159,7 @@ namespace Asteroids_Deluxe
                 {
                     Active = true;
                     m_Spawn = false;
+                    m_Start.Play(0.1f, 0, 0);
                 }
             }
 
@@ -173,35 +170,17 @@ namespace Asteroids_Deluxe
                     LostLife();
                 }
 
-                CheckBorders();
+                if (m_Shield.Active && m_ShieldPower > 0)
+                    m_ShieldPower -= 10 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                else if (m_ShieldPower < 100 && !m_Shield.Active)
+                    m_ShieldPower += 1 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                m_KeyState = Keyboard.GetState();
                 KeyInput();
+                m_KeyStateOld = m_KeyState;
+                CheckBorders();
                 CheckCollision();
-            }
-        }
-
-        void CheckCollision()
-        {
-            if (m_Pod.Active)
-            {
-                if (CirclesIntersect(m_Pod.Position, m_Pod.Radius))
-                {
-                    Hit = true;
-                    m_Pod.SplitAppart();
-                    SetScore(m_Pod.Score);
-                }
-
-                for (int i = 0; i < 4; i++)
-                {
-                    if (m_Shots[i].Active)
-                    {
-                        if (m_Shots[i].CirclesIntersect(m_Pod.Position, m_Pod.Radius))
-                        {
-                            m_Shots[i].Active = false;
-                            m_Pod.SplitAppart();
-                            SetScore(m_Pod.Score);
-                        }
-                    }
-                }
+                base.Update(gameTime);
             }
         }
 
@@ -235,24 +214,74 @@ namespace Asteroids_Deluxe
             ResetShip();
             SetScore(0);
             m_HighScoreList.NewGame();
+            ShipLivesDisplay();
         }
 
-        public void LoadSounds(SoundEffect fireshot, SoundEffect explode, SoundEffect bonus, SoundEffect thurst)
+        public void LoadSounds(SoundEffect fireshot, SoundEffect explode, SoundEffect bonus, SoundEffect thurst,
+            SoundEffect start, SoundEffect shield)
         {
+            m_ShieldOn = shield;
+            m_Start = start;
             m_FireShot = fireshot;
             m_Explode = explode;
             m_Bonus = bonus;
             m_Thrust = thurst;
-
             m_ThrustTimer.Amount = (float)m_Thrust.Duration.TotalSeconds;
+        }
+
+        public void ShieldHit(Vector3 position, Vector3 velocity)
+        {
+            Acceleration = Vector3.Zero;
+            Velocity = (Velocity * 0.1f) * -1;
+            Velocity += velocity * 0.95f;
+            Velocity += Serv.SetVelocityFromAngle(Serv.AngleFromVectors(position, Position), 75);
+            m_ShieldPower -= 20;
+        }
+
+        public void ShieldHit()
+        {
+            m_ShieldPower -= 40;
+        }
+
+        void CheckCollision()
+        {
+            if (m_Pod.Active)
+            {
+                if (m_Shield.Active)
+                {
+                    if (m_Pod.CirclesIntersect(m_Shield.Position, m_Shield.Radius))
+                    {
+                        ShieldHit(m_Pod.Position, m_Pod.Velocity);
+                    }
+                }
+                else if (CirclesIntersect(m_Pod.Position, m_Pod.Radius))
+                {
+                    Hit = true;
+                    m_Pod.SplitAppart();
+                    SetScore(m_Pod.Score);
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    if (m_Shots[i].Active)
+                    {
+                        if (m_Shots[i].CirclesIntersect(m_Pod.Position, m_Pod.Radius))
+                        {
+                            m_Shots[i].Active = false;
+                            m_Pod.SplitAppart();
+                            SetScore(m_Pod.Score);
+                        }
+                    }
+                }
+            }
         }
 
         void MakeShipLives(int count)
         {
             m_ShipLives.Add(new PlayerShip(m_Game));
-            m_ShipLives[count].Position = new Vector3((-count * 15) + -400, 400, 0);
+            m_ShipLives[count].Position = new Vector3((-count * 16) + -400, 400, 0);
             m_ShipLives[count].RotationInRadians = (float)Math.PI * 0.5f;
-            m_ShipLives[count].ScalePercent = 0.5f;
+            m_ShipLives[count].Scale = 0.5f;
         }
 
         void Explode()
@@ -269,6 +298,7 @@ namespace Asteroids_Deluxe
             Active = false;
             Hit = false;
             m_Flame.Active = false;
+            m_Shield.Active = false;
             m_Spawn = false;
 
             if (m_Lives < 1)
@@ -306,6 +336,7 @@ namespace Asteroids_Deluxe
             Velocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
             RotationInRadians = Serv.RandomMinMax(0, (float)MathHelper.TwoPi);
+            m_ShieldPower = 100;
         }
 
         void ThrustOn()
@@ -319,10 +350,7 @@ namespace Asteroids_Deluxe
 
                 if (Active)
                 {
-                    if (m_Flame.Active)
-                        m_Flame.Active = false;
-                    else
-                        m_Flame.Active = true;
+                    m_Flame.Active = !m_Flame.Active;
                 }
                 else
                     m_Flame.Active = false;
@@ -332,7 +360,7 @@ namespace Asteroids_Deluxe
             {
                 m_ThrustTimer.Reset();
 
-                m_Thrust.Play(0.9f, 0, 0);
+                m_Thrust.Play(0.33f, 0, 0);
             }
 
             if (Math.Abs(Velocity.X) + Math.Abs(Velocity.Y) < maxPerSecond)
@@ -347,7 +375,7 @@ namespace Asteroids_Deluxe
 
         void ThrustOff()
         {
-            float Deceration = 0.1f;
+            float Deceration = 0.25f;
             Acceleration = -Velocity * Deceration;
         }
 
@@ -369,16 +397,39 @@ namespace Asteroids_Deluxe
             }
         }
 
-        void Shield()
+        void ShieldOn()
         {
+            if (Active)
+            {
+                if (m_ShieldPower > 0)
+                {
+                    m_Shield.Active = true; //TODO: Finish shield functionality.
 
+                    if (!m_ShieldSoundPlayed)
+                    {
+                        m_ShieldOn.Play(0.75f, 0, 0);
+                        m_ShieldSoundPlayed = true;
+                    }
+                }
+                else
+                {
+                    m_Shield.Active = false;
+                    m_ShieldSoundPlayed = false;
+                }
+            }
+        }
+
+        void ShieldOff()
+        {
+            m_Shield.Active = false;
+            m_ShieldSoundPlayed = false;
         }
 
         void KeyInput()
         {
             float rotationAmound = MathHelper.Pi;
 
-            if (Keyboard.GetState().IsKeyDown(Keys.W) || Keyboard.GetState().IsKeyDown(Keys.Up))
+            if (m_KeyState.IsKeyDown(Keys.W) || m_KeyState.IsKeyDown(Keys.Up))
             {
                 ThrustOn();
             }
@@ -388,41 +439,50 @@ namespace Asteroids_Deluxe
                 ThrustOff();
             }
 
-            if (Keyboard.GetState().IsKeyDown(Keys.A) || Keyboard.GetState().IsKeyDown(Keys.Left))
+            if (m_KeyState.IsKeyDown(Keys.A) || m_KeyState.IsKeyDown(Keys.Left))
             {
                 RotationVelocity = rotationAmound;
             }
-            else if (Keyboard.GetState().IsKeyDown(Keys.D) || Keyboard.GetState().IsKeyDown(Keys.Right))
+            else if (m_KeyState.IsKeyDown(Keys.D) || m_KeyState.IsKeyDown(Keys.Right))
             {
                 RotationVelocity = -rotationAmound;
             }
             else
                 RotationVelocity = 0;
 
-            if (Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.Space))
+            if (!m_KeyStateOld.IsKeyDown(Keys.LeftControl) && !m_KeyStateOld.IsKeyDown(Keys.Space))
             {
-                if (!m_ShotKeyDown)
+                if (m_KeyState.IsKeyDown(Keys.LeftControl) || m_KeyState.IsKeyDown(Keys.Space))
                 {
-                    m_ShotKeyDown = true;
                     FireShot();
                 }
             }
 
-            if (Keyboard.GetState().IsKeyUp(Keys.LeftControl) && Keyboard.GetState().IsKeyUp(Keys.Space) && m_ShotKeyDown)
+            if (m_KeyState.IsKeyDown(Keys.RightShift))
             {
-                m_ShotKeyDown = false;
+                ShieldOn();
+            }
+            else
+            {
+                ShieldOff();
+            }
+#if DEBUG
+            if (m_KeyState.IsKeyDown(Keys.L) && !m_KeyStateOld.IsKeyDown(Keys.L))
+            {
+                m_Lives++;
+                ShipLivesDisplay();
             }
 
-            if (Keyboard.GetState().IsKeyDown(Keys.RightShift) && !m_HyperKeyDown)
+            if (m_KeyState.IsKeyDown(Keys.S) && !m_KeyStateOld.IsKeyDown(Keys.S))
             {
-                Shield();
-                m_HyperKeyDown = true;
+                m_ShieldTest = !m_ShieldTest;
             }
 
-            if (Keyboard.GetState().IsKeyUp(Keys.RightShift))
+            if (m_ShieldTest)
             {
-                m_HyperKeyDown = false;
+                ShieldOn();
             }
+#endif
         }
     }
 }

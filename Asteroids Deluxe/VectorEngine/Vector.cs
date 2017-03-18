@@ -78,8 +78,10 @@ namespace Asteroids_Deluxe.VectorEngine
         /// <summary>
         /// Initializes the point list.
         /// </summary>
-        public void InitializePoints(Vector3[] pointPosition)
+        public float InitializePoints(Vector3[] pointPosition)
         {
+            float radius = 0;
+
             if (!m_Initialized)
             {
                 m_Initialized = true;
@@ -93,9 +95,9 @@ namespace Asteroids_Deluxe.VectorEngine
 
                 m_PointList = new VertexPositionColor[pointPosition.Length];
 
-                for (int x = 0; x < pointPosition.Length; x++)
+                for (int i = 0; i < pointPosition.Length; i++)
                 {
-                    m_PointList[x] = new VertexPositionColor(pointPosition[x], new Color(190, 170, 255));
+                    m_PointList[i] = new VertexPositionColor(pointPosition[i], new Color(190, 170, 255));
                 }
 
                 // Initialize the vertex buffer, allocating memory for each vertex.
@@ -108,12 +110,23 @@ namespace Asteroids_Deluxe.VectorEngine
                 InitializeEffect();
                 Transform();
             }
+
+            for (int i = 0; i < pointPosition.Length; i++)
+            {
+                if (Math.Abs(pointPosition[i].X) > radius)
+                    radius = Math.Abs(pointPosition[i].X);
+
+                if (Math.Abs(pointPosition[i].Y) > radius)
+                    radius = Math.Abs(pointPosition[i].Y);
+            }
+
+            return radius;
         }
 
         void Transform()
         {
             // Calculate the mesh transformation by combining translation, rotation, and scaling
-            m_LocalMatrix = Matrix.CreateScale(ScalePercent) * Matrix.CreateFromYawPitchRoll(0, 0, RotationInRadians)
+            m_LocalMatrix = Matrix.CreateScale(Scale) * Matrix.CreateFromYawPitchRoll(0, 0, RotationInRadians)
                 * Matrix.CreateTranslation(Position);
             // Apply to Effect
             Services.BasicEffect.World = m_LocalMatrix;

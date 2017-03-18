@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SourceFileCollection xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Profile>Reach</Profile>
+  <Platform>Windows</Platform>
+  <Config />
+  <SourceFiles>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsPlayerExplosion.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsRockExplosion.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsUFOExplosion.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsUFOLarge.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsUFOShot.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsUFOSmall.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxePlayerStart.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxePodExplosion.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxePodSpawn.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxeShield.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxeBackground.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxeBonusShip.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxePlayerFire.wav</File>
+    <File>F:/Documents/Visual Studio 2017/Projects/VS2017C#/MonoGame/Asteroids Deluxe MonoGame DX/Asteroids Deluxe/Content/AsteroidsDeluxePlayerThrust.wav</File>
+  </SourceFiles>
+</SourceFileCollection>

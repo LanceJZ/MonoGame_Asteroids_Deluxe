@@ -64,7 +64,7 @@ namespace Asteroids_Deluxe.VectorEngine
             }
         }
 
-        public float ScalePercent
+        public float Scale
         {
             get
             {
@@ -237,50 +237,48 @@ namespace Asteroids_Deluxe.VectorEngine
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(GameTime gameTime)
         {
-            if (Active)
+            if (Moveable && Active)
             {
-                if (Moveable)
-                {
-                    base.Update(gameTime);
+                base.Update(gameTime);
 
-                    m_FrameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    Velocity += Acceleration * m_FrameTime;
-                    Position += Velocity * m_FrameTime;
-                    RotationVelocity += RotationAcceleration * m_FrameTime;
-                    RotationInRadians += RotationVelocity * m_FrameTime;
+                m_FrameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                Velocity += Acceleration * m_FrameTime;
+                Position += Velocity * m_FrameTime;
+                RotationVelocity += RotationAcceleration * m_FrameTime;
+                RotationInRadians += RotationVelocity * m_FrameTime;
 
-                    if (RotationInRadians > MathHelper.TwoPi)
-                        RotationInRadians = 0;
+                if (RotationInRadians > MathHelper.TwoPi)
+                    RotationInRadians = 0;
 
-                    if (RotationInRadians < 0)
-                        RotationInRadians = MathHelper.TwoPi;
-                }
+                if (RotationInRadians < 0)
+                    RotationInRadians = MathHelper.TwoPi;
             }
 
-                if (m_Parent)
+            if (m_Parent)
+            {
+                foreach (PositionedObject child in Children)
                 {
-                    foreach (PositionedObject child in Children)
+                    if (Active)
                     {
-                        if (Active)
+                        if (child.DirectConnection)
                         {
-                            if (child.DirectConnection)
-                            {
-                                child.Position = Position;
-                                child.RotationInRadians = RotationInRadians;
-                            }
-                            else
-                            {
-                                child.Position = Vector3.Transform(child.ReletivePosition,
-                                    Matrix.CreateRotationZ(RotationInRadians));
-                                child.Position += Position;
-                                child.RotationInRadians = RotationInRadians + child.ReletiveRotation;
-                            }
+                            child.Position = Position;
+                            child.RotationInRadians = RotationInRadians;
+                            child.Scale = Scale;
                         }
-
-                        if (child.ActiveDependent)
-                            child.Active = Active;
+                        else
+                        {
+                            child.Position = Vector3.Transform(child.ReletivePosition,
+                                Matrix.CreateRotationZ(RotationInRadians));
+                            child.Position += Position;
+                            child.RotationInRadians = RotationInRadians + child.ReletiveRotation;
+                        }
                     }
+
+                    if (child.ActiveDependent)
+                        child.Active = Active;
                 }
+            }
         }
 
         public override void Initialize()

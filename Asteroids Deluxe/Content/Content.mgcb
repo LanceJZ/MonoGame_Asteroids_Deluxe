@@ -13,47 +13,17 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin AsteroidsBackgroundOne.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:AsteroidsBackgroundOne.wav
-
-#begin AsteroidsBackgroundTwo.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:AsteroidsBackgroundTwo.wav
-
-#begin AsteroidsBonusShip.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:AsteroidsBonusShip.wav
-
 #begin AsteroidsPlayerExplosion.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:AsteroidsPlayerExplosion.wav
 
-#begin AsteroidsPlayerFire.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:AsteroidsPlayerFire.wav
-
 #begin AsteroidsRockExplosion.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:AsteroidsRockExplosion.wav
-
-#begin AsteroidsThrust.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:AsteroidsThrust.wav
 
 #begin AsteroidsUFOExplosion.wav
 /importer:WavImporter
@@ -78,4 +48,52 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:AsteroidsUFOSmall.wav
+
+#begin AsteroidsDeluxePlayerStart.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxePlayerStart.wav
+
+#begin AsteroidsDeluxePodExplosion.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxePodExplosion.wav
+
+#begin AsteroidsDeluxePodSpawn.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxePodSpawn.wav
+
+#begin AsteroidsDeluxeShield.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxeShield.wav
+
+#begin AsteroidsDeluxeBackground.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxeBackground.wav
+
+#begin AsteroidsDeluxeBonusShip.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxeBonusShip.wav
+
+#begin AsteroidsDeluxePlayerFire.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxePlayerFire.wav
+
+#begin AsteroidsDeluxePlayerThrust.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:AsteroidsDeluxePlayerThrust.wav
 
