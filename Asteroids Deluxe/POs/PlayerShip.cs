@@ -14,15 +14,15 @@ namespace Asteroids_Deluxe
 
         public override void Initialize()
         {
+            Active = false;
+            Moveable = false;
             base.Initialize();
         }
 
         public override void BeginRun()
         {
             base.BeginRun();
-            Moveable = false;
             Radius = m_Wing.Radius;
-            Active = false;
         }
 
         protected override void InitializeLineMesh()

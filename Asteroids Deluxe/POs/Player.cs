@@ -113,9 +113,9 @@ namespace Asteroids_Deluxe
 
         public override void Initialize()
         {
-            base.Initialize();
-
             m_FlameTimer.Amount = 0.01666f;
+
+            base.Initialize();
         }
 
         public void Initialize(UFO ufo, PodGroup podGroup)
@@ -170,10 +170,13 @@ namespace Asteroids_Deluxe
                     LostLife();
                 }
 
-                if (m_Shield.Active && m_ShieldPower > 0)
-                    m_ShieldPower -= 10 * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                else if (m_ShieldPower < 100 && !m_Shield.Active)
-                    m_ShieldPower += 1 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (!m_ShieldTest)
+                {
+                    if (m_Shield.Active && m_ShieldPower > 0)
+                        m_ShieldPower -= 10 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    else if (m_ShieldPower < 100 && !m_Shield.Active)
+                        m_ShieldPower += 1 * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                }
 
                 m_KeyState = Keyboard.GetState();
                 KeyInput();
@@ -235,12 +238,15 @@ namespace Asteroids_Deluxe
             Velocity = (Velocity * 0.1f) * -1;
             Velocity += velocity * 0.95f;
             Velocity += Serv.SetVelocityFromAngle(Serv.AngleFromVectors(position, Position), 75);
-            m_ShieldPower -= 20;
+
+            if (!m_ShieldTest)
+                m_ShieldPower -= 20;
         }
 
         public void ShieldHit()
         {
-            m_ShieldPower -= 40;
+            if (!m_ShieldTest)
+                m_ShieldPower -= 40;
         }
 
         void CheckCollision()
@@ -312,7 +318,7 @@ namespace Asteroids_Deluxe
             ResetShip();
         }
 
-        void ShipLivesDisplay()
+        void ShipLivesDisplay() //TODO: Fix wings appearing in middle of screen on new ship life.
         {
             for (int i = 0; i < m_ShipLives.Count; i++)
             {
@@ -344,7 +350,7 @@ namespace Asteroids_Deluxe
             float maxPerSecond = 820;
             float thrustAmount = 400;
 
-            if (m_FlameTimer.Seconds > m_FlameTimer.Amount)
+            if (m_FlameTimer.Expired)
             {
                 m_FlameTimer.Reset();
 
@@ -356,7 +362,7 @@ namespace Asteroids_Deluxe
                     m_Flame.Active = false;
             }
 
-            if (m_ThrustTimer.Seconds > m_ThrustTimer.Amount)
+            if (m_ThrustTimer.Expired)
             {
                 m_ThrustTimer.Reset();
 
@@ -405,7 +411,7 @@ namespace Asteroids_Deluxe
                 {
                     m_Shield.Active = true; //TODO: Finish shield functionality.
 
-                    if (!m_ShieldSoundPlayed)
+                    if (!m_ShieldSoundPlayed && !m_ShieldTest)
                     {
                         m_ShieldOn.Play(0.75f, 0, 0);
                         m_ShieldSoundPlayed = true;

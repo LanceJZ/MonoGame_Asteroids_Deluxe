@@ -27,6 +27,15 @@ namespace Asteroids_Deluxe.VectorEngine
             set
             {
                 m_Amount = value;
+                Reset();
+            }
+        }
+
+        public bool Expired
+        {
+            get
+            {
+                return m_Seconds > m_Amount;
             }
         }
 

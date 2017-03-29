@@ -45,7 +45,7 @@ namespace Asteroids_Deluxe
         int m_LargeRockSpawnAmount;
         int m_RockCount;
         bool m_PlayedBack = false;
-        bool m_PlayedTwo = false;
+        //bool m_PlayedTwo = false;
         bool m_Paused = false;
 
         public Game()
@@ -137,18 +137,14 @@ namespace Asteroids_Deluxe
         /// </summary>
         protected override void BeginRun()
         {
-            base.BeginRun();
-
             m_Player.BeginRun();
             m_Player.Initialize(m_UFO, m_Pod);
             m_Player.GameOver = true;
             m_Player.Active = false;
-            m_UFOTimer.Reset();
             m_UFOTimer.Amount = m_UFOTimerSeedAmount;
             m_UFO.Initialize(m_Player);
             m_Pod.Initialize(m_Player, m_UFO);
             m_Pod.BeginRun();
-            m_PodTimer.Reset();
             m_PodTimer.Amount = m_PodTimerSeedAmount;
             m_PlayerClear.Radius = 150;
             m_PlayerClear.Moveable = false;
@@ -156,6 +152,8 @@ namespace Asteroids_Deluxe
             SpawnLargeRocks(4);
             m_AtariHUD.ProcessWords("ATARI INC", new Vector3(34, (-Serv.WindowHeight * 0.5f) + 20, 0), 5);
             m_AtariDate.ProcessNumber(1980, new Vector3(-34, (-Serv.WindowHeight * 0.5f) + 20, 0), 5);
+
+            base.BeginRun();
         }
 
         /// <summary>
@@ -228,7 +226,7 @@ namespace Asteroids_Deluxe
 
         void PlayBackground()
         {
-            if (m_BackgroundDelay.Seconds > m_BackgroundDelay.Amount)
+            if (m_BackgroundDelay.Expired)
             {
                 m_BackgroundDelay.Reset();
 
@@ -236,7 +234,7 @@ namespace Asteroids_Deluxe
                     m_BackgroundDelay.Amount -= 0.025f;
 
 
-                if (m_BackGroundPlay.Seconds > m_BackGroundPlay.Amount && !m_PlayedBack)
+                if (m_BackGroundPlay.Expired && !m_PlayedBack)
                 {
                     m_PlayedBack = true;
                     m_BackGroundPlay.Reset();
@@ -351,7 +349,7 @@ namespace Asteroids_Deluxe
                 ResetUFO();
             }
 
-            if (m_UFOTimer.Seconds > m_UFOTimer.Amount && !m_UFO.Active)
+            if (m_UFOTimer.Expired && !m_UFO.Active)
             {
                 m_UFOTimer.Amount = Serv.RandomMinMax(m_UFOTimerSeedAmount * 0.5f,
                     m_UFOTimerSeedAmount + (m_UFOTimerSeedAmount - m_Wave));
@@ -367,7 +365,7 @@ namespace Asteroids_Deluxe
                 if (!m_Pod.Done)
                     m_PodTimer.Reset();
 
-                if (m_PodTimer.Seconds > m_PodTimer.Amount)
+                if (m_PodTimer.Expired)
                 {
                     m_PodTimer.Reset();
 

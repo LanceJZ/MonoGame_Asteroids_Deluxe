@@ -30,7 +30,7 @@ namespace Asteroids_Deluxe.VectorEngine
         bool m_ExplosionActive = false;
         bool m_Pause = false;
         bool m_Moveable = true;
-        bool m_Active = true;
+        bool m_Active = false;
         bool m_ActiveDependent;
         bool m_DirectConnection;
         bool m_Parent;

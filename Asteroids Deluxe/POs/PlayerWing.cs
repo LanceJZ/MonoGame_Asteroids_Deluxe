@@ -17,19 +17,19 @@ namespace Asteroids_Deluxe
 
         public override void Initialize()
         {
+            Active = false;
+            Moveable = false;
             base.Initialize();
         }
 
         public override void BeginRun()
         {
             base.BeginRun();
-            Active = false;
         }
 
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-
         }
 
         protected override void InitializeLineMesh()

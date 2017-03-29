@@ -17,7 +17,7 @@ namespace Asteroids_Deluxe
         {
             base.Update(gameTime);
 
-            if (m_LifeTimer.Seconds > m_LifeTimer.Amount)
+            if (m_LifeTimer.Expired)
                 Active = false;
         }
 
@@ -31,7 +31,6 @@ namespace Asteroids_Deluxe
             Position = position + new Vector3(serv.RandomMinMax(-radius * 0.5f, radius * 0.5f),
                 serv.RandomMinMax(-radius * 0.5f, radius * 0.5f), 0);
             Velocity = new Vector3(serv.RandomMinMax(-16, 16), serv.RandomMinMax(-16, 16), 0);
-            m_LifeTimer.Reset();
             m_LifeTimer.Amount = serv.RandomMinMax(0.1f, 1);
             Active = true;
         }

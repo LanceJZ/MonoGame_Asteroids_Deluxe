@@ -10,13 +10,14 @@ namespace Asteroids_Deluxe
 
         public override void Initialize()
         {
+            Moveable = false;
+
             base.Initialize();
         }
 
         public override void BeginRun()
         {
             base.BeginRun();
-            Moveable = false;
         }
 
         protected override void InitializeLineMesh()

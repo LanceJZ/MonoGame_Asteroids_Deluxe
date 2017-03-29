@@ -50,7 +50,7 @@ namespace Asteroids_Deluxe
         {
             m_Active = true;
             int count = (int)serv.RandomMinMax(10, 10 + radius);
-            
+
             if (count > m_Dots.Count)
             {
                 int more = count - m_Dots.Count;

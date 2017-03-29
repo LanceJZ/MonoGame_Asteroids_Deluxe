@@ -21,7 +21,7 @@ namespace Asteroids_Deluxe
             base.Update(gameTime);
             CheckBorders();
 
-            if (m_LifeTimer.Seconds > m_LifeTimer.Amount)
+            if (m_LifeTimer.Expired)
             {
                 Active = false;
             }
@@ -29,7 +29,6 @@ namespace Asteroids_Deluxe
 
         public void Spawn(Vector3 position, Vector3 velecity, float timer)
         {
-            m_LifeTimer.Reset();
             m_LifeTimer.Amount = timer;
             Position = position;
             Velocity = velecity;

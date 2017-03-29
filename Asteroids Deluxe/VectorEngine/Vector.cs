@@ -20,20 +20,21 @@ namespace Asteroids_Deluxe.VectorEngine
 
         public Vector (Game game) : base(game)
         {
+            Active = true;
+            Enabled = true;
         }
 
         public override void Initialize()
         {
-            base.Initialize();
             m_RasterizerState = new RasterizerState();
             m_RasterizerState.FillMode = FillMode.WireFrame;
             m_RasterizerState.CullMode = CullMode.None;
-            Active = true;
-            Enabled = true;
 
             Services.AddDrawableComponent(this);
 
             InitializeLineMesh();
+
+            base.Initialize();
         }
 
         protected virtual void InitializeLineMesh()

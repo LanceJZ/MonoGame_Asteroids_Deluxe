@@ -1,9 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Audio;
-using System.Collections.Generic;
-using System;
 using System.IO;
 using System.Text;
 
@@ -179,7 +175,7 @@ namespace Asteroids_Deluxe
                 {
                     if (m_HighScoreData[0].Score > 0)
                     {
-                        if (m_HighScoreTimer.Seconds > m_HighScoreTimer.Amount)
+                        if (m_HighScoreTimer.Expired)
                         {
                             HideScoreList();
                             m_GameOverDisplayed = true;
@@ -190,7 +186,7 @@ namespace Asteroids_Deluxe
                             m_HighScoreTimer.Reset();
                             m_GameOverTimer.Reset();
                         }
-                        else if (m_GameOverTimer.Seconds > m_GameOverTimer.Amount)
+                        else if (m_GameOverTimer.Expired)
                         {
                             ShowScoreList();
                             m_GameOverDisplayed = false;
@@ -214,7 +210,7 @@ namespace Asteroids_Deluxe
 
                     if (m_GameOverDisplayed)
                     {
-                        if (m_PushStartTimer.Seconds > m_PushStartTimer.Amount)
+                        if (m_PushStartTimer.Expired)
                         {
                             m_PushStartTimer.Reset();
 

@@ -106,7 +106,7 @@ namespace Asteroids_Deluxe
                 {
                     if (m_SmallSoucer)
                     {
-                        if (m_SmallTimer.Seconds > m_SmallTimer.Amount)
+                        if (m_SmallTimer.Expired)
                         {
                             m_SmallTimer.Reset();
                             m_Small.Play(0.5f, 0, 0);
@@ -114,7 +114,7 @@ namespace Asteroids_Deluxe
                     }
                     else
                     {
-                        if (m_LargeTimer.Seconds > m_LargeTimer.Amount)
+                        if (m_LargeTimer.Expired)
                         {
                             m_LargeTimer.Reset();
                             m_Large.Play(0.5f, 0, 0);
@@ -184,9 +184,9 @@ namespace Asteroids_Deluxe
 
         void CheckColusion()
         {
-            if (m_Player.Active)
+            if (Active)
             {
-                if (Active)
+                if (m_Player.Active)
                 {
                     if (m_Player.Shield.Active)
                     {
@@ -201,9 +201,26 @@ namespace Asteroids_Deluxe
                         m_Player.Hit = true;
                         m_Player.SetScore(m_Points);
                     }
+
                 }
 
-                if (m_Shot.Active)
+                for (int i = 0; i < 4; i++)
+                {
+                    if (m_Player.Shots[i].Active)
+                    {
+                        if (CirclesIntersect(m_Player.Shots[i].Position, m_Player.Shots[i].Radius))
+                        {
+                            Explode();
+                            m_Player.Shots[i].Active = false;
+                            m_Player.SetScore(m_Points);
+                        }
+                    }
+                }
+            }
+
+            if (m_Shot.Active)
+            {
+                if (m_Player.Active)
                 {
                     if (m_Player.Shield.Active)
                     {
@@ -220,33 +237,22 @@ namespace Asteroids_Deluxe
                     }
                 }
             }
-
-            for (int i = 0; i < 4; i++)
-            {
-                if (m_Player.Shots[i].Active)
-                {
-                    if (CirclesIntersect(m_Player.Shots[i].Position, m_Player.Shots[i].Radius))
-                    {
-                        Explode();
-                        m_Player.Shots[i].Active = false;
-                        m_Player.SetScore(m_Points);
-                    }
-                }
-            }
         }
 
         void TimeToShotYet()
         {
-            if (m_ShotTimer.Seconds > m_ShotTimer.Amount)
+            if (m_ShotTimer.Expired)
             {
+                m_ShotTimer.Reset();
                 FireShot();
             }
         }
 
         void TimeToChangeVectorYet()
         {
-            if (m_VectorTimer.Seconds > m_VectorTimer.Amount)
+            if (m_VectorTimer.Expired)
             {
+                m_VectorTimer.Reset();
                 ChangeVector();
             }
         }
@@ -256,7 +262,6 @@ namespace Asteroids_Deluxe
             if (!m_Player.GameOver)
                 m_FireShot.Play(0.4f, 0, 0);
 
-            m_ShotTimer.Reset();
             float speed = 400;
             float rad = 0;
 
@@ -286,7 +291,6 @@ namespace Asteroids_Deluxe
 
         void ChangeVector()
         {
-            m_VectorTimer.Reset();
             float vChange = Serv.RandomMinMax(0, 9);
 
             if (vChange < 5)
