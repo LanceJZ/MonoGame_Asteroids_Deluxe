@@ -108,8 +108,6 @@ namespace Asteroids_Deluxe.VectorEngine
                 // Set the vertex buffer data to the array of vertices.
                 m_VertexBuffer.SetData<VertexPositionColor>(m_PointList);
                 InitializeLineList();
-                InitializeEffect();
-                Transform();
             }
 
             for (int i = 0; i < pointPosition.Length; i++)
@@ -130,7 +128,7 @@ namespace Asteroids_Deluxe.VectorEngine
             m_LocalMatrix = Matrix.CreateScale(Scale) * Matrix.CreateFromYawPitchRoll(0, 0, RotationInRadians)
                 * Matrix.CreateTranslation(Position);
             // Apply to Effect
-            Services.BasicEffect.World = m_LocalMatrix;
+            ApplyWorldEffect();
         }
 
         /// <summary>
@@ -153,7 +151,7 @@ namespace Asteroids_Deluxe.VectorEngine
         /// Initializes the effect (loading, parameter setting, and technique selection)
         /// used by the game. Moved to Services.
         /// </summary>
-        public void InitializeEffect()
+        public void ApplyWorldEffect()
         {
             Services.BasicEffect.World = m_LocalMatrix;
         }

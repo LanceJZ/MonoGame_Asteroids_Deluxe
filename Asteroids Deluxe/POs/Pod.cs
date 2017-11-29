@@ -1,13 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using Asteroids_Deluxe.VectorEngine;
 
 namespace Asteroids_Deluxe
 {
-    using Serv = VectorEngine.Services;
-
-    public class Pod : VectorEngine.Vector
+    public class Pod : Vector
     {
         Player m_Player;
         UFO m_UFO;
+        SoundEffect m_Explode;
         float m_RotateMagnitude = MathHelper.PiOver2;
         int m_Score = 200;
         bool m_NewWave;
@@ -38,6 +39,11 @@ namespace Asteroids_Deluxe
             Active = false;
         }
 
+        public void LoadSounds(SoundEffect explode)
+        {
+            m_Explode = explode;
+        }
+
         public override void BeginRun()
         {
             base.BeginRun();
@@ -51,21 +57,21 @@ namespace Asteroids_Deluxe
             if (Active & Moveable)
             {
                 if (m_Player.Active && !m_Player.Hit && !m_NewWave)
-                    RotationVelocity = Serv.AimAtTarget(Position, m_Player.Position, RotationInRadians, m_RotateMagnitude);
+                    RotationVelocity = Services.AimAtTarget(Position, m_Player.Position, RotationInRadians, m_RotateMagnitude);
                 else
                 {
                     RotationVelocity = 0;
 
                     if (m_UFO.Active)
                     {
-                        RotationVelocity = Serv.AimAtTarget(Position, m_UFO.Position, RotationInRadians, m_RotateMagnitude);
+                        RotationVelocity = Services.AimAtTarget(Position, m_UFO.Position, RotationInRadians, m_RotateMagnitude);
                     }
                 }
 
                 if (m_NewWave)
                 {
-                    if (Position.X > Serv.WindowWidth * 0.5f || Position.X < -Serv.WindowWidth * 0.5f
-                        || Position.Y > Serv.WindowHeight * 0.5f || Position.Y < -Serv.WindowHeight * 0.5f)
+                    if (Position.X > Services.WindowWidth * 0.5f || Position.X < -Services.WindowWidth * 0.5f
+                        || Position.Y > Services.WindowHeight * 0.5f || Position.Y < -Services.WindowHeight * 0.5f)
                     {
                         Active = false;
                     }
@@ -73,33 +79,27 @@ namespace Asteroids_Deluxe
                     RotationVelocity = 0;
                 }
 
-                Velocity = Serv.SetVelocityFromAngle(RotationInRadians, 70);
-                CheckCollision();
+                Velocity = Services.VelocityFromAngle(RotationInRadians, 70);
+
+                if (CheckCollision())
+                {
+                    if (!m_Player.GameOver)
+                        m_Explode.Play(0.15f, 0.75f, 0);
+                    Active = false;
+                    Moveable = false;
+                }
             }
-        }
-
-        protected override void InitializeLineMesh()
-        {
-            Vector3[] pointPosition = new Vector3[5];
-
-            pointPosition[0] = new Vector3(-11.7f, 14.04f, 0);//Top back tip.
-            pointPosition[1] = new Vector3(11.7f, 0, 0);//Nose pointing to the right of screen.
-            pointPosition[2] = new Vector3(-11.7f, -14.04f, 0);//Bottom Back tip.
-            pointPosition[3] = new Vector3(-4.68f, 0, 0);//Back inside indent.
-            pointPosition[4] = new Vector3(-11.7f, 14.04f, 0);//Top Back Tip.
-
-            Radius = InitializePoints(pointPosition);
         }
 
         public bool CheckPlayerShotCollision()
         {
-            for (int shot = 0; shot < 4; shot++)
+            foreach (Shot shot in m_Player.Shots)
             {
-                if (m_Player.Shots[shot].Active)
+                if (shot.Active)
                 {
-                    if (CirclesIntersect(m_Player.Shots[shot].Position, m_Player.Shots[shot].Radius))
+                    if (CirclesIntersect(shot.Position, shot.Radius))
                     {
-                        m_Player.Shots[shot].Active = false;
+                        shot.Active = false;
                         return true;
                     }
                 }
@@ -157,7 +157,20 @@ namespace Asteroids_Deluxe
             return false;
         }
 
-        void CheckCollision()
+        protected override void InitializeLineMesh()
+        {
+            Vector3[] pointPosition = new Vector3[5];
+
+            pointPosition[0] = new Vector3(-11.7f, 14.04f, 0);//Top back tip.
+            pointPosition[1] = new Vector3(11.7f, 0, 0);//Nose pointing to the right of screen.
+            pointPosition[2] = new Vector3(-11.7f, -14.04f, 0);//Bottom Back tip.
+            pointPosition[3] = new Vector3(-4.68f, 0, 0);//Back inside indent.
+            pointPosition[4] = new Vector3(-11.7f, 14.04f, 0);//Top Back Tip.
+
+            Radius = InitializePoints(pointPosition);
+        }
+
+        bool CheckCollision()
         {
             if (CheckPlayerCollision())
             {
@@ -168,23 +181,22 @@ namespace Asteroids_Deluxe
                 else
                 {
                     m_Player.SetScore(m_Score);
-                    Active = false;
-                    Moveable = false;
+                    return true;
                 }
             }
 
             if (CheckPlayerShotCollision())
             {
                 m_Player.SetScore(m_Score);
-                Active = false;
-                Moveable = false;
+                return true;
             }
 
             if (CheckUFOCollision() || CheckUFOShotCollision())
             {
-                Active = false;
-                Moveable = false;
+                return true;
             }
+
+            return false;
         }
     }
 }

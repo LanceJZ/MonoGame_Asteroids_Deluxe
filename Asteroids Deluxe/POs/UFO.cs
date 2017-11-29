@@ -33,7 +33,6 @@ namespace Asteroids_Deluxe
         bool m_SmallSoucer;
         bool m_Done;
 
-        public int PlayerScore { set { m_PlayerScore = value; } }
 
         public bool Done
         {
@@ -60,6 +59,9 @@ namespace Asteroids_Deluxe
                 m_Shot = value;
             }
         }
+
+        public int Points { get => m_Points; }
+        public int PlayerScore { set => m_PlayerScore = value; }
 
         public UFO(Game game) : base(game)
         {
@@ -145,7 +147,7 @@ namespace Asteroids_Deluxe
 
             float spawnPercent = (float)(Math.Pow(0.915, (SpawnCount) / (Wave + 1)));
 
-            if (Serv.RandomMinMax(0, 99) < (m_PlayerScore / 400) + (spawnPercent * 100) || m_PlayerScore > 20000)
+            if (Serv.RandomMinMax(0, 99) < (spawnPercent * 100) - (m_PlayerScore / 400))
             {
                 m_SmallSoucer = false;
                 m_Points = 200;
@@ -203,20 +205,8 @@ namespace Asteroids_Deluxe
                     }
 
                 }
-
-                for (int i = 0; i < 4; i++)
-                {
-                    if (m_Player.Shots[i].Active)
-                    {
-                        if (CirclesIntersect(m_Player.Shots[i].Position, m_Player.Shots[i].Radius))
-                        {
-                            Explode();
-                            m_Player.Shots[i].Active = false;
-                            m_Player.SetScore(m_Points);
-                        }
-                    }
-                }
             }
+
 
             if (m_Shot.Active)
             {

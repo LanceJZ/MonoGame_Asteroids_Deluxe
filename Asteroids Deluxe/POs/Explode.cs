@@ -61,9 +61,9 @@ namespace Asteroids_Deluxe
                 }
             }
 
-            for (int i = 0; i < count; i++)
+            foreach (Dot dot in m_Dots)
             {
-                m_Dots[i].Spawn(position, radius);
+                dot.Spawn(position, radius);
             }
         }
     }

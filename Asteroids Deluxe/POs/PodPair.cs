@@ -1,15 +1,16 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using Asteroids_Deluxe.VectorEngine;
 
 namespace Asteroids_Deluxe
 {
-    using Serv = VectorEngine.Services;
-
-    public class PodPair : VectorEngine.PositionedObject
+    public class PodPair : PositionedObject
     {
         Pod[] m_Pods = new Pod[2];
         Player m_Player;
         UFO m_UFO;
+        SoundEffect m_Explode;
         float m_RotateMagnitude = MathHelper.PiOver2;
         int m_Score = 100;
         bool m_NewWave;
@@ -53,14 +54,20 @@ namespace Asteroids_Deluxe
             Active = false;
         }
 
+        public void LoadSounds(SoundEffect explode)
+        {
+            m_Explode = explode;
+        }
+
         public override void BeginRun()
         {
             base.BeginRun();
 
-            for (int i = 0; i < 2; i++)
+            foreach (Pod pod in m_Pods)
             {
-                m_Pods[i].Moveable = false;
-                m_Pods[i].Initialize(m_Player, m_UFO);
+                pod.Moveable = false;
+                pod.Initialize(m_Player, m_UFO);
+                pod.LoadSounds(m_Explode);
             }
 
             m_Pods[1].ReletiveRotation = (float)Math.PI;
@@ -76,21 +83,23 @@ namespace Asteroids_Deluxe
             if (Active & Moveable)
             {
                 if (m_Player.Active && !m_Player.Hit && !m_NewWave)
-                    RotationVelocity = Serv.AimAtTarget(Position, m_Player.Position, RotationInRadians, m_RotateMagnitude);
+                    RotationVelocity = Services.AimAtTarget(Position, m_Player.Position,
+                        RotationInRadians, m_RotateMagnitude);
                 else
                 {
                     RotationVelocity = 0;
 
                     if (m_UFO.Active)
                     {
-                        RotationVelocity = Serv.AimAtTarget(Position, m_UFO.Position, RotationInRadians, m_RotateMagnitude);
+                        RotationVelocity = Services.AimAtTarget(Position, m_UFO.Position,
+                            RotationInRadians, m_RotateMagnitude);
                     }
                 }
 
                 if (m_NewWave)
                 {
-                    if (Position.X > Serv.WindowWidth * 0.5f || Position.X < -Serv.WindowWidth * 0.5f
-                        || Position.Y > Serv.WindowHeight * 0.5f || Position.Y < -Serv.WindowHeight * 0.5f)
+                    if (Position.X > Services.WindowWidth * 0.5f || Position.X < -Services.WindowWidth * 0.5f
+                        || Position.Y > Services.WindowHeight * 0.5f || Position.Y < -Services.WindowHeight * 0.5f)
                     {
                         Active = false;
 
@@ -103,20 +112,20 @@ namespace Asteroids_Deluxe
                     RotationVelocity = 0;
                 }
 
-                Velocity = Serv.SetVelocityFromAngle(RotationInRadians, 70);
+                Velocity = Services.VelocityFromAngle(RotationInRadians, 70);
                 CheckCollision();
             }
         }
 
         void CheckCollision()
         {
-            for (int i = 0; i < 2; i++)
+            foreach (Pod pod in m_Pods)
             {
-                if (m_Pods[i].CheckPlayerCollision())
+                if (pod.CheckPlayerCollision())
                 {
                     if (m_Player.Shield.Active)
                     {
-                        m_Player.ShieldHit(m_Pods[i].Position, Velocity);
+                        m_Player.ShieldHit(pod.Position, Velocity);
                     }
                     else
                     {
@@ -125,13 +134,13 @@ namespace Asteroids_Deluxe
                     }
                 }
 
-                if (m_Pods[i].CheckPlayerShotCollision())
+                if (pod.CheckPlayerShotCollision())
                 {
                     m_Player.SetScore(m_Score);
                     SplitAppart();
                 }
 
-                if (m_Pods[i].CheckUFOCollision() || m_Pods[i].CheckUFOShotCollision())
+                if (pod.CheckUFOCollision() || pod.CheckUFOShotCollision())
                 {
                     SplitAppart();
                 }
@@ -140,9 +149,12 @@ namespace Asteroids_Deluxe
 
         void SplitAppart()
         {
-            for (int i = 0; i < 2; i++)
+            if (!m_Player.GameOver)
+                m_Explode.Play(0.25f, 0.5f, 0);
+
+            foreach (Pod pod in m_Pods)
             {
-                m_Pods[i].Moveable = true;
+                pod.Moveable = true;
             }
 
             Active = false;

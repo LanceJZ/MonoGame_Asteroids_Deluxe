@@ -20,7 +20,7 @@ namespace Asteroids_Deluxe
         List<PlayerShip> m_ShipLives;
         Shot[] m_Shots;
         UFO m_UFO;
-        PodGroup m_Pod;
+        PodGroup m_PodGroup;
         SoundEffect m_FireShot;
         SoundEffect m_Explode;
         SoundEffect m_Bonus;
@@ -121,7 +121,7 @@ namespace Asteroids_Deluxe
         public void Initialize(UFO ufo, PodGroup podGroup)
         {
             m_UFO = ufo;
-            m_Pod = podGroup;
+            m_PodGroup = podGroup;
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace Asteroids_Deluxe
             Acceleration = Vector3.Zero;
             Velocity = (Velocity * 0.1f) * -1;
             Velocity += velocity * 0.95f;
-            Velocity += Serv.SetVelocityFromAngle(Serv.AngleFromVectors(position, Position), 75);
+            Velocity += Serv.VelocityFromAngle(Serv.AngleFromVectors(position, Position), 75);
 
             if (!m_ShieldTest)
                 m_ShieldPower -= 20;
@@ -251,43 +251,51 @@ namespace Asteroids_Deluxe
 
         void CheckCollision()
         {
-            if (m_Pod.Active)
+            if (m_PodGroup.Active)
             {
                 if (m_Shield.Active)
                 {
-                    if (m_Pod.CirclesIntersect(m_Shield.Position, m_Shield.Radius))
+                    if (m_PodGroup.CirclesIntersect(m_Shield.Position, m_Shield.Radius))
                     {
-                        ShieldHit(m_Pod.Position, m_Pod.Velocity);
+                        ShieldHit(m_PodGroup.Position, m_PodGroup.Velocity);
                     }
                 }
-                else if (CirclesIntersect(m_Pod.Position, m_Pod.Radius))
+                else if (CirclesIntersect(m_PodGroup.Position, m_PodGroup.Radius))
                 {
                     Hit = true;
-                    m_Pod.SplitAppart();
-                    SetScore(m_Pod.Score);
+                    m_PodGroup.SplitAppart();
+                    SetScore(m_PodGroup.Score);
                 }
 
-                for (int i = 0; i < 4; i++)
+            }
+
+            foreach (Shot shot in m_Shots)
+            {
+                if (shot.Active)
                 {
-                    if (m_Shots[i].Active)
+                    if (m_PodGroup.Active)
                     {
-                        if (m_Shots[i].CirclesIntersect(m_Pod.Position, m_Pod.Radius))
+                        if (shot.CirclesIntersect(m_PodGroup.Position, m_PodGroup.Radius))
                         {
-                            m_Shots[i].Active = false;
-                            m_Pod.SplitAppart();
-                            SetScore(m_Pod.Score);
+                            shot.Active = false;
+                            m_PodGroup.SplitAppart();
+                            SetScore(m_PodGroup.Score);
+                            break;
+                        }
+                    }
+
+                    if (m_UFO.Active)
+                    {
+                        if (shot.CirclesIntersect(m_UFO.Position, m_UFO.Radius))
+                        {
+                            shot.Active = false;
+                            m_UFO.Active = false;
+                            m_UFO.Explode();
+                            SetScore(m_UFO.Points);
                         }
                     }
                 }
             }
-        }
-
-        void MakeShipLives(int count)
-        {
-            m_ShipLives.Add(new PlayerShip(m_Game));
-            m_ShipLives[count].Position = new Vector3((-count * 16) + -400, 400, 0);
-            m_ShipLives[count].RotationInRadians = (float)Math.PI * 0.5f;
-            m_ShipLives[count].Scale = 0.5f;
         }
 
         void Explode()
@@ -334,6 +342,14 @@ namespace Asteroids_Deluxe
             {
                 m_ShipLives[i].Active = true;
             }
+        }
+
+        void MakeShipLives(int count)
+        {
+            m_ShipLives.Add(new PlayerShip(m_Game));
+            m_ShipLives[count].Position = new Vector3((-count * 16) + -400, 400, 0);
+            m_ShipLives[count].RotationInRadians = (float)Math.PI * 0.5f;
+            m_ShipLives[count].Scale = 0.5f;
         }
 
         void ResetShip()
@@ -464,7 +480,8 @@ namespace Asteroids_Deluxe
                 }
             }
 
-            if (m_KeyState.IsKeyDown(Keys.RightShift))
+            if (m_KeyState.IsKeyDown(Keys.Down) || m_KeyState.IsKeyDown(Keys.RightControl)
+                || m_KeyState.IsKeyDown(Keys.RightShift))
             {
                 ShieldOn();
             }

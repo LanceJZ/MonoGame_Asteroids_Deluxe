@@ -1,18 +1,21 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
+using Asteroids_Deluxe.VectorEngine;
 
 namespace Asteroids_Deluxe
 {
-    using Serv = VectorEngine.Services;
-
     class Rock : VectorEngine.Vector
     {
         Player m_Player;
         UFO m_UFO;
         Explode m_Explosion;
         SoundEffect m_Explode;
-        int m_Points = 20;
-        float m_Speed = 75;
+        RockSize Size;
+        int m_Points = 0;
+        float m_Speed = 0;
+        float m_Radius;
+
+        public RockSize SizeofRock { get => Size; set => Size = value; }
 
         public bool ExplosionDone
         {
@@ -49,7 +52,7 @@ namespace Asteroids_Deluxe
 
         protected override void InitializeLineMesh()
         {
-            int rockType = (int)Serv.RandomMinMax(0, 3.99f);
+            int rockType = (int)Services.RandomMinMax(0, 3.99f);
 
             switch (rockType)
             {
@@ -90,14 +93,14 @@ namespace Asteroids_Deluxe
                 }
             }
 
-            for (int i = 0; i < 4; i++)
+            foreach (Shot shot in m_Player.Shots)
             {
-                if (m_Player.Shots[i].Active)
+                if (shot.Active)
                 {
-                    if (CirclesIntersect(m_Player.Shots[i].Position, m_Player.Shots[i].Radius))
+                    if (CirclesIntersect(shot.Position, shot.Radius))
                     {
                         Explode();
-                        m_Player.Shots[i].Active = false;
+                        shot.Active = false;
                         m_Player.SetScore(m_Points);
                     }
                 }
@@ -122,36 +125,44 @@ namespace Asteroids_Deluxe
             }
         }
 
-        public void Spawn(Vector3 position, float scale, float speed, int points, Player player, UFO ufo)
-        {
-            Scale = scale;
-            Radius = Radius * scale;
-            m_Points = points;
-            m_Speed = speed;
-            m_Player = player;
-            m_UFO = ufo;
-            Spawn(position);
-        }
-
-        public void Spawn(Vector3 position)
-        {
-            Position = position;
-            Spawn();
-        }
-
-        public void Spawn(Player player, UFO ufo)
+        public void Create(Player player, UFO ufo)
         {
             m_Player = player;
             m_UFO = ufo;
-            Position = Serv.SetRandomEdge();
-            Spawn();
         }
 
-        public void Spawn()
+        public void Spawn(Vector3 position, RockSize size)
         {
+            Radius = m_Radius;
             Active = true;
-            Velocity = Serv.SetRandomVelocity(m_Speed);
-            RotationVelocity = Serv.RandomMinMax(-MathHelper.PiOver4, MathHelper.PiOver4);
+            Position = position;
+            Size = size;
+
+            switch (Size)
+            {
+                case RockSize.Large:
+                    Position = Services.SetRandomEdge();
+                    Scale = 1;
+                    m_Points = 20;
+                    m_Speed = 75;
+                    break;
+
+                case RockSize.Medium:
+                    Scale = 0.5f;
+                    m_Points = 50;
+                    m_Speed = 150;
+                    break;
+
+                case RockSize.Small:
+                    Scale = 0.25f;
+                    m_Points = 100;
+                    m_Speed = 300;
+                    break;
+            }
+
+            Radius *= Scale;
+            Velocity = Services.SetRandomVelocity(m_Speed);
+            RotationVelocity = Services.RandomMinMax(-MathHelper.PiOver4, MathHelper.PiOver4);
         }
 
         void Explode()
@@ -167,7 +178,6 @@ namespace Asteroids_Deluxe
         {
             Vector3[] pointPosition = new Vector3[13];
 
-            //Rock One
             pointPosition[0] = new Vector3(-34, 17.6f, 0);
             pointPosition[1] = new Vector3(-17.6f, 35.2f, 0);
             pointPosition[2] = new Vector3(0, 25.8f, 0);
@@ -182,14 +192,13 @@ namespace Asteroids_Deluxe
             pointPosition[11] = new Vector3(-24.7f, 0, 0);
             pointPosition[12] = new Vector3(-34, 17.6f, 0);
 
-            Radius = InitializePoints(pointPosition);
+            m_Radius = InitializePoints(pointPosition);
         }
 
         void RockTwo()
         {
             Vector3[] pointPosition = new Vector3[11];
 
-            //Rock One
             pointPosition[0] = new Vector3(-34, 17.6f, 0);
             pointPosition[1] = new Vector3(-16.4f, 34, 0);
             pointPosition[2] = new Vector3(0, 17.6f, 0);
@@ -202,14 +211,13 @@ namespace Asteroids_Deluxe
             pointPosition[9] = new Vector3(-34, -16.4f, 0);
             pointPosition[10] = new Vector3(-34, 17.6f, 0);
 
-            Radius = InitializePoints(pointPosition);
+            m_Radius = InitializePoints(pointPosition);
         }
 
         void RockThree()
         {
             Vector3[] pointPosition = new Vector3[13];
 
-            //Rock One
             pointPosition[0] = new Vector3(-34, 17.6f, 0);
             pointPosition[1] = new Vector3(-8.2f, 17.6f, 0);
             pointPosition[2] = new Vector3(-18.8f, 34, 0);
@@ -224,14 +232,13 @@ namespace Asteroids_Deluxe
             pointPosition[11] = new Vector3(-34, -9.4f, 0);
             pointPosition[12] = new Vector3(-34, 17.6f, 0);
 
-            Radius = InitializePoints(pointPosition);
+            m_Radius = InitializePoints(pointPosition);
         }
 
         void RockFour()
         {
             Vector3[] pointPosition = new Vector3[13];
 
-            //Rock One
             pointPosition[0] = new Vector3(-34, 9.4f, 0);
             pointPosition[1] = new Vector3(-7, 34, 0);
             pointPosition[2] = new Vector3(17.6f, 34, 0);
@@ -246,7 +253,7 @@ namespace Asteroids_Deluxe
             pointPosition[11] = new Vector3(-17.6f, 0, 0);
             pointPosition[12] = new Vector3(-34, 9.4f, 0);
 
-            Radius = InitializePoints(pointPosition);
+            m_Radius = InitializePoints(pointPosition);
         }
     }
 }

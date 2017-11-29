@@ -136,10 +136,17 @@ namespace Asteroids_Deluxe.VectorEngine
         {
             base.Draw(gameTime);
 
-            foreach(IDrawComponent drawable in m_DrawableComponents)
+
+            foreach (EffectPass pass in BasicEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+            }
+
+            foreach (IDrawComponent drawable in m_DrawableComponents)
             {
                 drawable.Draw(gameTime);
             }
+
         }
         /// <summary>
         /// This is used to start up Panther Engine Services.
@@ -160,7 +167,7 @@ namespace Asteroids_Deluxe.VectorEngine
                 m_Instance = new Services(game);
                 m_RandomNumber = new Random(DateTime.Now.Millisecond);
                 //Set View Matrix and Projection Matrix
-                m_ViewMatrix = Matrix.CreateLookAt(new Vector3(0.0f, 0.0f, 1f), Vector3.Zero, Vector3.Up);
+                m_ViewMatrix = Matrix.CreateLookAt(new Vector3(0.0f, 0.0f, 1f), Vector3.Zero, Vector3.UnitY);
                 m_ProjectionMatrix = Matrix.CreateOrthographic(m_ScreenSize.X, m_ScreenSize.Y, 1, 2);
                 BasicEffect = new BasicEffect(graphics.GraphicsDevice);
                 BasicEffect.VertexColorEnabled = true;
@@ -209,16 +216,16 @@ namespace Asteroids_Deluxe.VectorEngine
         {
             float ang = RandomRadian();
             float amt = RandomMinMax(speed * 0.15f, speed);
-            return SetVelocityFromAngle(ang, amt);
+            return VelocityFromAngle(ang, amt);
         }
 
         public static Vector3 SetRandomVelocity(float speed, float radianDirection)
         {
             float amt = RandomMinMax(speed * 0.15f, speed);
-            return SetVelocityFromAngle(radianDirection, amt);
+            return VelocityFromAngle(radianDirection, amt);
         }
 
-        public static Vector3 SetVelocityFromAngle(float rotation, float magnitude)
+        public static Vector3 VelocityFromAngle(float rotation, float magnitude)
         {
             return new Vector3((float)Math.Cos(rotation) * magnitude, (float)Math.Sin(rotation) * magnitude, 0);
         }

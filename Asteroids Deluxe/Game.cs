@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Asteroids_Deluxe
 {
@@ -28,9 +29,7 @@ namespace Asteroids_Deluxe
         Timer m_BackgroundDelay;
         Timer m_BackgroundTwoDelay;
         Timer m_GameWavePlayTime;
-        List<Rock> m_LargeRocks;
-        List<Rock> m_MedRocks;
-        List<Rock> m_SmallRocks;
+        List<Rock> m_Rocks;
         SoundEffect m_RockExplode;
         SoundEffect m_Background;
         Word m_AtariHUD;
@@ -42,7 +41,7 @@ namespace Asteroids_Deluxe
         readonly float m_BackgroundTwoDelaySeed = 2;
         int m_UFOCount;
         int m_Wave;
-        int m_LargeRockSpawnAmount;
+        int m_LargeRockSpawnAmount = 2;
         int m_RockCount;
         bool m_PlayedBack = false;
         //bool m_PlayedTwo = false;
@@ -57,7 +56,7 @@ namespace Asteroids_Deluxe
             m_GraphicsDM.GraphicsProfile = GraphicsProfile.HiDef;
             screenSize.X = m_GraphicsDM.PreferredBackBufferWidth = 1200;
             screenSize.Y = m_GraphicsDM.PreferredBackBufferHeight = 900;
-            m_GraphicsDM.PreferMultiSampling = true; //Error in MonoGame 3.6 for DirectX, fixed for next version.
+            m_GraphicsDM.PreferMultiSampling = true; //Error in MonoGame 3.6 release for DirectX, fixed for next version.
             m_GraphicsDM.PreparingDeviceSettings += SetMultiSampling;
             m_GraphicsDM.ApplyChanges();
             IsFixedTimeStep = false;
@@ -74,9 +73,7 @@ namespace Asteroids_Deluxe
             m_GameWavePlayTime = new Timer(this);
             m_AtariHUD = new Word(this);
             m_AtariDate = new Number(this);
-            m_LargeRocks = new List<Rock>();
-            m_MedRocks = new List<Rock>();
-            m_SmallRocks = new List<Rock>();
+            m_Rocks = new List<Rock>();
             Content.RootDirectory = "Content";
         }
 
@@ -95,10 +92,10 @@ namespace Asteroids_Deluxe
         {
             Serv.Initialize(m_GraphicsDM, this);
 
-            // The number determines how good our antialiasing works.
+            // The number determines how good our anti-aliasing works.
             // Possible values are 2,4,8,16,32, but not all work on all computers.
             // 4 is safe, and 8 is too in almost all cases
-            // Higher numbers mean lower framerates
+            // Higher numbers mean lower frame-rates
 
             base.Initialize();
         }
@@ -110,8 +107,10 @@ namespace Asteroids_Deluxe
         protected override void LoadContent()
         {
             m_Player.LoadSounds(Content.Load<SoundEffect>("AsteroidsDeluxePlayerFire"),
-                Content.Load<SoundEffect>("AsteroidsPlayerExplosion"), Content.Load<SoundEffect>("AsteroidsDeluxeBonusShip"),
-                Content.Load<SoundEffect>("AsteroidsDeluxePlayerThrust"), Content.Load<SoundEffect>("AsteroidsDeluxePlayerStart"),
+                Content.Load<SoundEffect>("AsteroidsPlayerExplosion"),
+                Content.Load<SoundEffect>("AsteroidsDeluxeBonusShip"),
+                Content.Load<SoundEffect>("AsteroidsDeluxePlayerThrust"),
+                Content.Load<SoundEffect>("AsteroidsDeluxePlayerStart"),
                 Content.Load<SoundEffect>("AsteroidsDeluxeShield"));
 
             m_UFO.LoadSounds(Content.Load<SoundEffect>("AsteroidsUFOExplosion"),
@@ -120,6 +119,8 @@ namespace Asteroids_Deluxe
 
             m_RockExplode = Content.Load<SoundEffect>("AsteroidsRockExplosion");
             m_Background = Content.Load<SoundEffect>("AsteroidsDeluxeBackground");
+            m_Pod.LoadSounds(Content.Load<SoundEffect>("AsteroidsDeluxePodSpawn"),
+                Content.Load<SoundEffect>("AsteroidsDeluxePodExplosion"));
         }
 
         /// <summary>
@@ -149,7 +150,6 @@ namespace Asteroids_Deluxe
             m_PlayerClear.Radius = 150;
             m_PlayerClear.Moveable = false;
             m_BackGroundPlay.Amount = m_Background.Duration.Seconds;
-            SpawnLargeRocks(4);
             m_AtariHUD.ProcessWords("ATARI INC", new Vector3(34, (-Serv.WindowHeight * 0.5f) + 20, 0), 5);
             m_AtariDate.ProcessNumber(1980, new Vector3(-34, (-Serv.WindowHeight * 0.5f) + 20, 0), 5);
 
@@ -182,9 +182,9 @@ namespace Asteroids_Deluxe
                 PlayBackground();
             }
 
-            CountRocks();
             UFOController();
             PodController();
+            RockController();
 
             base.Update(gameTime);
         }
@@ -245,25 +245,7 @@ namespace Asteroids_Deluxe
 
         bool CheckPlayerClear()
         {
-            foreach (Rock rock in m_LargeRocks)
-            {
-                if (rock.Active)
-                {
-                    if (m_PlayerClear.CirclesIntersect(rock.Position, rock.Radius))
-                        return false;
-                }
-            }
-
-            foreach (Rock rock in m_MedRocks)
-            {
-                if (rock.Active)
-                {
-                    if (m_PlayerClear.CirclesIntersect(rock.Position, rock.Radius))
-                        return false;
-                }
-            }
-
-            foreach (Rock rock in m_SmallRocks)
+            foreach (Rock rock in m_Rocks)
             {
                 if (rock.Active)
                 {
@@ -319,24 +301,14 @@ namespace Asteroids_Deluxe
             ResetUFO();
             ResetPod();
 
-            for (int i = 0; i < m_LargeRocks.Count; i++)
+            foreach (Rock rock in m_Rocks)
             {
-                m_LargeRocks[i].Active = false;
-            }
-
-            for (int i = 0; i < m_MedRocks.Count; i++)
-            {
-                m_MedRocks[i].Active = false;
-            }
-
-            for (int i = 0; i < m_SmallRocks.Count; i++)
-            {
-                m_SmallRocks[i].Active = false;
+                rock.Active = false;
             }
 
             m_Wave = 0;
             m_UFOCount = 0;
-            SpawnLargeRocks(m_LargeRockSpawnAmount = 4);
+            m_LargeRockSpawnAmount = 2;
             m_BackgroundDelay.Amount = m_BackgroundOneDelaySeed;
             m_BackgroundTwoDelay.Amount = m_BackgroundTwoDelaySeed;
 
@@ -393,11 +365,11 @@ namespace Asteroids_Deluxe
             m_Pod.Reset();
         }
 
-        void CountRocks()
+        void RockController()
         {
             m_RockCount = 0;
 
-            foreach (Rock rock in m_LargeRocks)
+            foreach (Rock rock in m_Rocks)
             {
                 if (rock.Active)
                 {
@@ -405,40 +377,23 @@ namespace Asteroids_Deluxe
 
                     if (rock.Hit)
                     {
-                        SpawnMedRocks(rock.Position);
+                        switch(rock.SizeofRock)
+                        {
+                            case RockSize.Large:
+                                SpawnRocks(rock.Position, RockSize.Medium, 2);
+                                break;
+
+                            case RockSize.Medium:
+                                SpawnRocks(rock.Position, RockSize.Small, 2);
+                                break;
+
+                            case RockSize.Small:
+                                break;
+                        }
+
                         rock.Active = false;
                         rock.Hit = false;
-                    }
-                }
-
-            }
-
-            foreach (Rock rock in m_MedRocks)
-            {
-                if (rock.Active)
-                {
-                    m_RockCount++;
-
-                    if (rock.Hit)
-                    {
-                        SpawnSmallRocks(rock.Position);
-                        rock.Active = false;
-                        rock.Hit = false;
-                    }
-                }
-
-            }
-
-            foreach (Rock rock in m_SmallRocks)
-            {
-                if (rock.Active)
-                {
-                    m_RockCount++;
-
-                    if (rock.Hit)
-                    {
-                        rock.Active = false;
-                        rock.Hit = false;
+                        return;
                     }
                 }
             }
@@ -448,93 +403,37 @@ namespace Asteroids_Deluxe
                 if (m_LargeRockSpawnAmount > 12)
                     m_LargeRockSpawnAmount = 12;
 
-                SpawnLargeRocks(m_LargeRockSpawnAmount += 2);
+                SpawnRocks(Vector3.Zero, RockSize.Large, m_LargeRockSpawnAmount += 2);
                 m_Wave++;
             }
         }
 
-        void SpawnLargeRocks(int count)
+        void SpawnRocks(Vector3 position, RockSize rockSize, int count)
         {
-            m_GameWavePlayTime.Reset();
-            m_Wave++;
-            m_Pod.NewWave();
-
             for (int i = 0; i < count; i++)
             {
                 bool spawnNewRock = true;
+                int rockFree = m_Rocks.Count;
 
-                foreach (Rock rock in m_LargeRocks)
+                for (int rock = 0; rock < rockFree; rock++)
                 {
-                    if (!rock.Active && !rock.ExplosionActive)
+                    if (!m_Rocks[rock].Active && !m_Rocks[rock].ExplosionActive)
                     {
                         spawnNewRock = false;
-                        rock.Spawn();
-                        rock.Position = Serv.SetRandomEdge();
+                        rockFree = rock;
                         break;
                     }
                 }
 
                 if (spawnNewRock)
                 {
-                    int rock = m_LargeRocks.Count;
-                    m_LargeRocks.Add(new Rock(this));
-                    m_LargeRocks[rock].Spawn(m_Player, m_UFO);
-                    m_LargeRocks[rock].LoadSound(m_RockExplode);
+                    m_Rocks.Add(new Rock(this));
+                    m_Rocks.Last().Create(m_Player, m_UFO);
+                    m_Rocks.Last().LoadSound(m_RockExplode);
                 }
+
+                m_Rocks[rockFree].Spawn(position, rockSize);
             }
-        }
-
-        void SpawnMedRocks(Vector3 position)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                bool spawnNewRock = true;
-
-                foreach (Rock rock in m_MedRocks)
-                {
-                    if (!rock.Active && !rock.ExplosionActive)
-                    {
-                        spawnNewRock = false;
-                        rock.Spawn(position);
-                        break;
-                    }
-                }
-
-                if (spawnNewRock)
-                {
-                    int rock = m_MedRocks.Count;
-                    m_MedRocks.Add(new Rock(this));
-                    m_MedRocks[rock].Spawn(position, 0.5f, 150, 50, m_Player, m_UFO);
-                    m_MedRocks[rock].LoadSound(m_RockExplode);
-                }
-            }
-        }
-
-        void SpawnSmallRocks(Vector3 position)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                bool spawnNewRock = true;
-
-                foreach (Rock rock in m_SmallRocks)
-                {
-                    if (!rock.Active && !rock.ExplosionActive)
-                    {
-                        spawnNewRock = false;
-                        rock.Spawn(position);
-                        break;
-                    }
-                }
-
-                if (spawnNewRock)
-                {
-                    int rock = m_SmallRocks.Count;
-                    m_SmallRocks.Add(new Rock(this));
-                    m_SmallRocks[rock].Spawn(position, 0.25f, 300, 100, m_Player, m_UFO);
-                    m_SmallRocks[rock].LoadSound(m_RockExplode);
-                }
-            }
-
         }
     }
 }

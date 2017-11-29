@@ -41,8 +41,8 @@ namespace Asteroids_Deluxe
         {
             Vector3[] pointPosition = new Vector3[2];
 
-            pointPosition[0] = new Vector3(0, serv.RandomMinMax(2.25f, 2.25f), 0);
-            pointPosition[1] = new Vector3(0, serv.RandomMinMax(-4.25f, -4.25f), 0);
+            pointPosition[0] = new Vector3(0, serv.RandomMinMax(-2.25f, 2.25f), 0);
+            pointPosition[1] = new Vector3(0, serv.RandomMinMax(-4.25f, 4.25f), 0);
 
             InitializePoints(pointPosition);
         }

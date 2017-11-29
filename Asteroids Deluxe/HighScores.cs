@@ -246,10 +246,10 @@ namespace Asteroids_Deluxe
             m_PushStartHUD.ProcessWords("PUSH START", new Vector3(0, (Serv.WindowHeight * 0.5f) * 0.666f, 0), 12);
             m_PushStartHUD.HideWords();
             float coinsY = (-Serv.WindowHeight * 0.5f) * 0.4666f;
-            m_CoinPlayHUD.ProcessWords("COIN   PLAY", new Vector3(0, coinsY, 0), 12);
+            m_CoinPlayHUD.ProcessWords("COIN   PLAY", new Vector3(20, coinsY, 0), 12);
             m_CoinPlayHUD.HideWords();
-            m_CoinPlayOnes[0].ProcessNumber(1, new Vector3(-200, coinsY, 0), 12);
-            m_CoinPlayOnes[1].ProcessNumber(1, new Vector3(-10, coinsY, 0), 12);
+            m_CoinPlayOnes[0].ProcessNumber(1, new Vector3(-180, coinsY, 0), 12);
+            m_CoinPlayOnes[1].ProcessNumber(1, new Vector3(10, coinsY, 0), 12);
             m_CoinPlayOnes[0].HideNumbers();
             m_CoinPlayOnes[1].HideNumbers();
 
@@ -418,7 +418,7 @@ namespace Asteroids_Deluxe
             if (Keyboard.GetState().IsKeyUp(Keys.Left) && m_KeyLeftDown)
                 m_KeyLeftDown = false;
 
-            if (Keyboard.GetState().IsKeyUp(Keys.Down) && m_KeyNextDown)
+            if (Keyboard.GetState().IsKeyUp(Keys.RightShift) && m_KeyNextDown)
                 m_KeyNextDown = false;
         }
 

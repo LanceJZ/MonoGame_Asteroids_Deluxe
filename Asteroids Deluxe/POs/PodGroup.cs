@@ -1,14 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using Asteroids_Deluxe.VectorEngine;
 
 namespace Asteroids_Deluxe
 {
-    using Serv = VectorEngine.Services;
-
-    public class PodGroup : VectorEngine.PositionedObject
+    public class PodGroup : PositionedObject
     {
         PodPair[] m_PodPair = new PodPair[3];
         Player m_Player;
         UFO m_UFO;
+        SoundEffect m_Spawn;
+        SoundEffect m_Explode;
         int m_Score = 50;
         bool m_NewWave = false;
         bool m_Done = false;
@@ -42,9 +44,9 @@ namespace Asteroids_Deluxe
         {
             base.Initialize();
 
-            for (int i = 0; i < 3; i++)
+            foreach (PodPair pair in m_PodPair)
             {
-                AddChild(m_PodPair[i], false, false);
+                AddChild(pair, false, false);
             }
         }
 
@@ -55,15 +57,22 @@ namespace Asteroids_Deluxe
             Active = false;
         }
 
+        public void LoadSounds(SoundEffect spawn, SoundEffect explode)
+        {
+            m_Spawn = spawn;
+            m_Explode = explode;
+        }
+
         public override void BeginRun()
         {
             base.BeginRun();
 
-            for (int i = 0; i < 3; i++)
+            foreach (PodPair pair in m_PodPair)
             {
-                m_PodPair[i].Moveable = false;
-                m_PodPair[i].Initialize(m_Player, m_UFO);
-                m_PodPair[i].BeginRun();
+                pair.Moveable = false;
+                pair.Initialize(m_Player, m_UFO);
+                pair.LoadSounds(m_Explode);
+                pair.BeginRun();
             }
 
             Radius = 25.68f;
@@ -83,8 +92,8 @@ namespace Asteroids_Deluxe
             {
                 if (m_NewWave)
                 {
-                    if (Position.X > Serv.WindowWidth * 0.5f || Position.X < -Serv.WindowWidth * 0.5f
-                        || Position.Y > Serv.WindowHeight * 0.5f || Position.Y < -Serv.WindowHeight * 0.5f)
+                    if (Position.X > Services.WindowWidth * 0.5f || Position.X < -Services.WindowWidth * 0.5f
+                        || Position.Y > Services.WindowHeight * 0.5f || Position.Y < -Services.WindowHeight * 0.5f)
                     {
                         Active = false;
                     }
@@ -97,14 +106,14 @@ namespace Asteroids_Deluxe
 
             if (!m_Done)
             {
-                for (int pair = 0; pair < 3; pair++)
+                foreach (PodPair pair in m_PodPair)
                 {
-                    if (m_PodPair[pair].Active)
+                    if (pair.Active)
                         return;
 
-                    for (int pod = 0; pod < 2; pod++)
+                    foreach (Pod pod in pair.Pods)
                     {
-                        if (m_PodPair[pair].Pods[pod].Active)
+                        if (pod.Active)
                             return;
                     }
                 }
@@ -117,34 +126,36 @@ namespace Asteroids_Deluxe
         {
             m_NewWave = true;
 
-            for (int pair = 0; pair < 3; pair++)
+            foreach (PodPair pair in m_PodPair)
             {
-                m_PodPair[pair].NewWave = true;
+                pair.NewWave = true;
 
-                for (int pod = 0; pod < 2; pod++)
+                foreach (Pod pod in pair.Pods)
                 {
-                    m_PodPair[pair].Pods[pod].NewWave = true;
+                    pod.NewWave = true;
                 }
             }
         }
 
         public void Spawn()
         {
-            Velocity = Serv.SetVelocityFromAngle(20);
-            Position = Serv.SetRandomEdge();
+            if (!m_Player.GameOver)
+                m_Spawn.Play();
+            Velocity = Services.SetVelocityFromAngle(20);
+            Position = Services.SetRandomEdge();
             Active = true;
             m_NewWave = false;
             m_Done = false;
 
-            for (int pair = 0; pair < 3; pair++)
+            foreach (PodPair pair in m_PodPair)
             {
-                m_PodPair[pair].Active = true;
-                m_PodPair[pair].NewWave = false;
+                pair.Active = true;
+                pair.NewWave = false;
 
-                for (int pod = 0; pod < 2; pod++)
+                foreach (Pod pod in pair.Pods)
                 {
-                    m_PodPair[pair].Pods[pod].Active = true;
-                    m_PodPair[pair].Pods[pod].NewWave = false;
+                    pod.Active = true;
+                    pod.NewWave = false;
                 }
             }
         }
@@ -155,26 +166,28 @@ namespace Asteroids_Deluxe
             m_NewWave = false;
             m_Done = true;
 
-            for (int pair = 0; pair < 3; pair++)
+            foreach (PodPair pair in m_PodPair)
             {
-                m_PodPair[pair].Active = false;
-                m_PodPair[pair].Moveable = false;
+                pair.Active = false;
+                pair.Moveable = false;
 
-                for (int pod = 0; pod < 2; pod++)
+                foreach (Pod pod in pair.Pods)
                 {
-                    m_PodPair[pair].Pods[pod].Active = false;
-                    m_PodPair[pair].Pods[pod].Moveable = false;
+                    pod.Active = false;
+                    pod.Moveable = false;
                 }
             }
         }
 
         public void SplitAppart()
         {
+            if (!m_Player.GameOver)
+                m_Explode.Play(0.5f, 0, 0);
             Active = false;
 
-            for (int i = 0; i < 3; i++)
+            foreach (PodPair pair in m_PodPair)
             {
-                m_PodPair[i].Moveable = true;
+                pair.Moveable = true;
             }
         }
     }

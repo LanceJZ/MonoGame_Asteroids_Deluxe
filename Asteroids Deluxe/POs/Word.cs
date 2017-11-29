@@ -115,7 +115,7 @@ namespace Asteroids_Deluxe
                 foreach (VectorEngine.Vector line in m_EachLine)
                 {
                     line.Active = false;
-                    line.Enabled = false;                    
+                    line.Enabled = false;
                 }
             }
 
