@@ -123,6 +123,8 @@ namespace Asteroids_Deluxe
             }
         }
 
+        public bool IsThereANewHighScore { get => m_IsThereANewHighScore; }
+
         public HighScores(Game game) : base(game)
         {
             game.Components.Add(this);

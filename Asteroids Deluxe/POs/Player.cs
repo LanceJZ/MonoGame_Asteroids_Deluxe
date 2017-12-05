@@ -45,6 +45,12 @@ namespace Asteroids_Deluxe
         bool m_ShieldTest = false;
         bool m_ShieldSoundPlayed = false;
 
+        public bool NewHighScore
+        {
+            get => m_HighScoreList.IsThereANewHighScore;
+        }
+
+
         public Shot[] Shots
         {
             get { return m_Shots; }
@@ -401,7 +407,7 @@ namespace Asteroids_Deluxe
             Acceleration = -Velocity * Deceration;
         }
 
-        void FireShot()
+        void FireShot() //TODO: Make this Foreach
         {
             for (int shotCount = 0; shotCount < 4; shotCount++)
             {

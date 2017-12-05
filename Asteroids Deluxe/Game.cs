@@ -43,7 +43,7 @@ namespace Asteroids_Deluxe
         int m_Wave;
         int m_LargeRockSpawnAmount = 2;
         int m_RockCount;
-        bool m_PlayedBack = false;
+        bool m_PlayedBack = true;
         //bool m_PlayedTwo = false;
         bool m_Paused = false;
 
@@ -203,7 +203,8 @@ namespace Asteroids_Deluxe
         void KeyInput()
         {
 #if DEBUG
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+                Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             if (m_KeyState.IsKeyDown(Keys.K) && !m_KeyStateOld.IsKeyDown(Keys.K))
@@ -217,7 +218,8 @@ namespace Asteroids_Deluxe
                 m_Paused = !m_Paused;
             }
 
-            if (m_KeyState.IsKeyDown(Keys.N) && !m_KeyStateOld.IsKeyDown(Keys.N) && m_Player.GameOver)
+            if (m_KeyState.IsKeyDown(Keys.N) && !m_KeyStateOld.IsKeyDown(Keys.N) && m_Player.GameOver &&
+                !m_Player.NewHighScore)
             {
                 m_Player.GameOver = false;
                 NewGame();
@@ -234,9 +236,8 @@ namespace Asteroids_Deluxe
                     m_BackgroundDelay.Amount -= 0.025f;
 
 
-                if (m_BackGroundPlay.Expired && !m_PlayedBack)
+                if (m_BackGroundPlay.Expired && m_PlayedBack)
                 {
-                    m_PlayedBack = true;
                     m_BackGroundPlay.Reset();
                     m_Background.Play(0.25f, 0, 0);
                 }
